@@ -1,1 +1,42 @@
-null
+[
+  {
+    "number": "FB1",
+    "size": "S",
+    "code1": "PCE",
+    "gate1": "A1",
+    "code2": "AIX",
+    "gate2": "B1"
+  },
+  {
+    "number": "FB2",
+    "size": "S",
+    "code1": "PCE",
+    "gate1": "A1",
+    "code2": "TKX",
+    "gate2": "C2"
+  },
+  {
+    "number": "FB3",
+    "size": "S",
+    "code1": "AIX",
+    "gate1": "B1",
+    "code2": "TKX",
+    "gate2": "C2"
+  },
+  {
+    "number": "FB201",
+    "size": "M",
+    "code1": "AIX",
+    "gate1": "B2",
+    "code2": "NMW",
+    "gate2": "D1"
+  },
+  {
+    "number": "FB301",
+    "size": "M",
+    "code1": "TKX",
+    "gate1": "C1",
+    "code2": "NMW",
+    "gate2": "D1"
+  }
+]

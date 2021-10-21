@@ -37,11 +37,17 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
             utils._warn(f"Airport `{code}` has no gates but is stated as a hub, maybe you mean: {utils._gcm(code, config['gates'].keys())}", nowarn)
     config['hubs'] = list(filter(lambda c: c in config['gates'].keys(), config['hubs']))
 
+    # ensure that flight numbers are allocated for hubs
+    for hub in config['hubs']:
+      if hub not in config['range_h2n']:
+        raise ValueError(f"Flight number range not specified for hub `{hub}`")
+
     # TODO ensure range_h2n for hubs
 
     # == Plan the flights ==
 
     flight_plan = {} # {airport_code: {flight_num: {gate: XXX, dest: XXX, dest_gate: XXX, size: X}}}
+    flight_nums = []
     nonhubs = [g for g in config['gates'].keys() if g not in config['hubs']]
     gates = config['gates'].copy()
     for gate_set in gates.values():
@@ -60,9 +66,9 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
         if mode == "h2n": nums = nums[code_]
         nums = list(map(lambda r: range(r[0], r[1]+1), nums))
         for num in itertools.chain(*nums):
-            yield config['airline_code']+str(num)
+            if config['airline_code']+str(num) not in flight_nums: 
+               yield config['airline_code']+str(num)
         utils._warn(f"Not enough flight numbers for {mode} flights" + (f" from {code_}" if code_ else ""), nowarn)
-        # TODO ensure no overlap of flight nums
 
     def get_gate(c1: str, c2: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         for g1 in gates[c1]:
@@ -82,6 +88,8 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
             try:
                 flight_num1 = next(flight_nums_h2h)
                 flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2h)
+                flight_nums.append(flight_num1)
+                flight_nums.append(flight_num2)
             except StopIteration:
                 break
             for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1), (code2, code1, gate2, gate1, flight_num2)]:
@@ -120,3 +128,21 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
     # nonhub-to-nonhub flights
 
     print(json.dumps(flight_plan, indent=2))
+    
+    # == convert to flight list ==
+    if output_format == 'json':
+        processed_flights = []
+        out = []
+        for code1, flights in flight_plan.items():
+           for num, flightinfo in flights.items():
+              if num in processed_flights: continue
+              out.append({
+                "number": num,
+                "size": flightinfo['size'],
+                "code1": code1,
+                "gate1": flightinfo['gate'],
+                "code2": flightinfo['dest'],
+                "gate2": flightinfo['dest_gate']
+              })
+              processed_flights.append(num)
+        return out
