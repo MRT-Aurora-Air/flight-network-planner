@@ -1,7 +1,9 @@
 import argparse
+import json
+import yaml
+
 import blessed
-import json, yaml
-import os
+
 term = blessed.Terminal()
 
 def main():
@@ -24,6 +26,7 @@ def main():
     p_run.add_argument('-v', '--verbose', help="Makes planner output more info", action='count', default=0)
     p_run.add_argument('-q', '--quiet', help="Makes planner output less info", action='count', default=0)
     p_run.add_argument('-nw', '--nowarn', help="Suppress warnings", action="store_true")
+    p_run.add_argument('-nc', '--nocache', help="Do not cache data from external sources", action="store_true")
 
     args = parser.parse_args()
 
@@ -36,7 +39,7 @@ def main():
         with open(args.file, "r") as f:
             config = yaml.safe_load(f)
             f.close()
-        output = run(config, format=args.format, verbosity=args.verbose-args.quiet, nowarn=args.nowarn)
+        output = run(config, output_format=args.format, verbosity=args.verbose-args.quiet, nowarn=args.nowarn, nocache=args.nocache)
         with open(args.output+".json", "w") as f:
             json.dump(output, f, indent=2)
             f.close()
