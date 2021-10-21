@@ -7,9 +7,9 @@ def get_config(name: str, force: bool=False) -> None:
     with open(os.path.dirname(__file__)+"/defaultconfig.yaml", "r") as f:
         data = f.read()
         f.close()
-    with open(name+".yaml", "w") as f:
+    with open(name+".yaml", "w+") as f:
         if f.read() != data and not force:
-            print(term.bright_red(f"{name}.yaml has been edited; use `-f` to overwrite"))
+            print(term.bright_red(f"{name}.yaml has already been edited; use `-f` to overwrite"))
             return
         f.write(data)
         f.close()

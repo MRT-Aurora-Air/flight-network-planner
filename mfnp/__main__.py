@@ -5,7 +5,6 @@ import os
 term = blessed.Terminal()
 
 def main():
-    print(os.getcwd())
     from __init__ import __version__
     from getconfig import get_config
     from run import run
@@ -24,6 +23,7 @@ def main():
     p_run.add_argument('-f', '--format', type=str, help="The format to output results as", default="json", choices=['json', 'yaml', 'txt'])
     p_run.add_argument('-v', '--verbose', help="Makes planner output more info", action='count', default=0)
     p_run.add_argument('-q', '--quiet', help="Makes planner output less info", action='count', default=0)
+    p_run.add_argument('-nw', '--nowarn', help="Suppress warnings", action="store_true")
 
     args = parser.parse_args()
 
@@ -34,10 +34,11 @@ def main():
         get_config(args.output, force=args.force)
     elif args.task == "run":
         with open(args.file, "r") as f:
+            config = yaml.safe_load(f)
             f.close()
-        output = run(args.file, format=args.format, verbosity=args.verbose-args.quiet)
+        output = run(config, format=args.format, verbosity=args.verbose-args.quiet, nowarn=args.nowarn)
         with open(args.output+".json", "w") as f:
-            json.dump(output, f)
+            json.dump(output, f, indent=2)
             f.close()
     else:
         parser.print_help()
