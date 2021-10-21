@@ -1,2 +1,2 @@
 # flight-network-planner
-Plan your flight network 
+Flight network planner for Minecart Rapid Transit
