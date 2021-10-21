@@ -1,0 +1,48 @@
+# MRT Flight Network Planner Configuration file
+
+# == General ==
+# airline_name: The name of the airline
+# airline_code: The two-letter code that is prefixed to all flight numbers
+airline_name: Foobar Air
+airline_code: FB
+
+# == Handling existing flights ==
+# Flight data is pulled from the MRT Transit sheet.
+# ignored_airlines: The airlines to be ignored on the sheet (default: the value in airline_name)
+ignored_airlines: []
+
+# == Airports ==
+# hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
+# hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
+hubs: []
+hub_threshold: 5
+
+# == Flight naming scheme ==
+# For range_XXX values, give ranges as [[min1, max1], [min2, max2], ...]
+# range_h2h: The range of flight numbers for hub-to-hub flights
+# range_n2n: The range of flight numbers for nonhub-to-nonhub flights
+# range_h2n: The range of flight numbers for hub-to-nonhub flights
+#   XXX: [...]: XXX is the hub's airport code
+# both_dir_same_num: Whether flights use the same number for both directions
+range_h2h: [[1, 100]]
+range_n2n: [[901, 1000]]
+range_h2n:
+  ABC: [[101, 200]]
+  PQR: [[201, 300]]
+  XYZ: [[301, 400]]
+both_dir_same_num: true
+
+# == Gates ==
+# If both gate_json and gates are provided, gate_json will be picked first
+# gate_json: The JSON file of all gates at each airport
+# gates: A list of all the gates in the airport
+#   XXX: XXX is the hub's airport code
+#   - code: The code of the gate
+#     size: The size of the gate
+gate_json:
+gates:
+  XXX:
+  - code: A1
+    size: S
+  - code: A2
+    size: S
