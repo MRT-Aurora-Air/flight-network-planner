@@ -115,10 +115,10 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                 c = c1 if gs is g1s else c2
                 con_types = get_connection_type(c, g["dests"])
                 if c in nonhubs:
-                    if con_types['h2n'] > config['max_h2n'] and ((c1_is_hub and not c2_is_hub) or (not c1_is_hub and c2_is_hub)):
-                        g['score'] -= 4*(con_types['h2n'] - config['max_h2n'])
-                    if con_types['n2n'] > config['max_n2n'] and (not c1_is_hub and not c2_is_hub):
-                        g['score'] -= 4*(con_types['n2n'] - config['max_n2n'])
+                    if con_types['h2n'] >= config['max_h2n'] and ((c1_is_hub and not c2_is_hub) or (not c1_is_hub and c2_is_hub)):
+                        g['score'] -= 4*(con_types['h2n'] - config['max_h2n'] + 1)
+                    if con_types['n2n'] >= config['max_n2n'] and (not c1_is_hub and not c2_is_hub):
+                        g['score'] -= 4*(con_types['n2n'] - config['max_n2n'] + 1)
                 
         combis = []
         for g1 in g1s:
