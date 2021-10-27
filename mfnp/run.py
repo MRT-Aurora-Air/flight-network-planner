@@ -1,11 +1,15 @@
 import itertools
+from types import GeneratorType
 from typing import Optional, Tuple
 
 import blessed
 import json
 term = blessed.Terminal()
 
-import utils
+try:
+    import utils
+except ModuleNotFoundError:
+    import mfnp.utils as utils
 
 def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=False, nocache: bool=False):
     # == Preparatory stuff ==
@@ -68,7 +72,7 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                yield config['airline_code']+str(num)
         utils._warn(f"Not enough flight numbers for {mode} flights" + (f" from {code_}" if code_ else ""), nowarn)
 
-    def get_gate(c1: str, c2: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    '''def get_gate(c1: str, c2: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         for g1 in gates[c1]:
             for g2 in gates[c2]:
                 if g1['size'] == g2['size'] and g1['capacity'] > 0 and g2['capacity'] > 0:
@@ -77,9 +81,9 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                     g1['dests'].append(g2)
                     g2['dests'].append(g1)
                     return g1['size'], g1['code'], g2['code']
-        return None, None, None
+        return None, None, None'''
 
-    def get_gate_h2n(c1: str, c2: str, exist_ok: bool=False) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def get_gate(c1: str, c2: str, exist_ok: bool=False) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         if not exist_ok and flight_already_exists(c1, c2):
             return None, None, None
         g1s = gates[c1][:]
@@ -94,23 +98,75 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
         for g1 in g1s:
             for g2 in g2s:
                 combis.append((g1, g2))
-        combis.sort(key=lambda x, y: x+y)
+        combis.sort(key=lambda x: x[0]['score']+x[1]['score'], reverse=True)
+        for g1, g2 in combis:
+            if g1['size'] == g2['size'] and g1['capacity'] > 0 and g2['capacity'] > 0:
+                g1['capacity'] -= 1
+                g2['capacity'] -= 1
+                g1['dests'].append(g2)
+                g2['dests'].append(g1)
+                return g1['size'], g1['code'], g2['code']
+        return None, None, None
         
 
-    # hub-to-nonhub flights (not existing)
-    for code1 in config['hubs']:
-        flight_nums_h2n = flight_num_generator('h2n', code_=code1)
-        for code2 in nonhubs:
+    for exist_ok in [True, False]:
+        # hub-to-nonhub flights
+        for code1 in config['hubs']:
+            flight_nums_h2n = flight_num_generator('h2n', code_=code1)
+            for code2 in nonhubs:
+                if not flight_already_exists(code1, code2):
+                    size, gate1, gate2 = get_gate(code1, code2, exist_ok=exist_ok)
+                    if size is None: continue
+                    try:
+                        flight_num1 = next(flight_nums_h2n)
+                        flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2n)
+                    except StopIteration:
+                        break
+                    for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
+                                                                            (code2, code1, gate2, gate1, flight_num2)]:
+                        if origin not in flight_plan: flight_plan[origin] = {}
+                        flight_plan[origin][flight_num1] = {
+                            "gate": origin_gate,
+                            "dest": dest,
+                            "dest_gate": dest_gate,
+                            "size": size
+                        }
+
+        # hub-to-hub flights
+        flight_nums_h2h = flight_num_generator('h2h')
+        for code1, code2 in itertools.combinations(config['hubs'], 2):
             if not flight_already_exists(code1, code2):
-                size, gate1, gate2 = get_gate(code1, code2)
+                size, gate1, gate2 = get_gate(code1, code2, exist_ok=exist_ok)
                 if size is None: continue
                 try:
-                    flight_num1 = next(flight_nums_h2n)
-                    flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2n)
+                    flight_num1 = next(flight_nums_h2h)
+                    flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2h)
+                    flight_nums.append(flight_num1)
+                    flight_nums.append(flight_num2)
+                except StopIteration:
+                    break
+                for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1), (code2, code1, gate2, gate1, flight_num2)]:
+                    if origin not in flight_plan: flight_plan[origin] = {}
+                    flight_plan[origin][flight_num] = {
+                        "gate": origin_gate,
+                        "dest": dest,
+                        "dest_gate": dest_gate,
+                        "size": size
+                    }
+
+        # nonhub-to-nonhub flights
+        flight_nums_n2n = flight_num_generator('n2n')
+        for code1, code2 in itertools.combinations(nonhubs, 2):
+            if not flight_already_exists(code1, code2):
+                size, gate1, gate2 = get_gate(code1, code2, exist_ok=exist_ok)
+                if size is None: continue
+                try:
+                    flight_num1 = next(flight_nums_n2n)
+                    flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_n2n)
                 except StopIteration:
                     break
                 for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
-                                                                         (code2, code1, gate2, gate1, flight_num2)]:
+                                                                            (code2, code1, gate2, gate1, flight_num2)]:
                     if origin not in flight_plan: flight_plan[origin] = {}
                     flight_plan[origin][flight_num1] = {
                         "gate": origin_gate,
@@ -118,32 +174,6 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                         "dest_gate": dest_gate,
                         "size": size
                     }
-
-    # hub-to-hub flights (not existing)
-    flight_nums_h2h = flight_num_generator('h2h')
-    for code1, code2 in itertools.combinations(config['hubs'], 2):
-        if not flight_already_exists(code1, code2):
-            size, gate1, gate2 = get_gate(code1, code2)
-            if size is None: continue
-            try:
-                flight_num1 = next(flight_nums_h2h)
-                flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2h)
-                flight_nums.append(flight_num1)
-                flight_nums.append(flight_num2)
-            except StopIteration:
-                break
-            for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1), (code2, code1, gate2, gate1, flight_num2)]:
-                if origin not in flight_plan: flight_plan[origin] = {}
-                flight_plan[origin][flight_num] = {
-                    "gate": origin_gate,
-                    "dest": dest,
-                    "dest_gate": dest_gate,
-                    "size": size
-                }
-
-    # huh-to-hub flights (existing)
-
-    # nonhub-to-nonhub flights
 
     print(json.dumps(flight_plan, indent=2))
     
@@ -153,14 +183,15 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
         out = []
         for code1, flights in flight_plan.items():
            for num, flightinfo in flights.items():
-              if num in processed_flights: continue
-              out.append({
-                "number": num,
-                "size": flightinfo['size'],
-                "code1": code1,
-                "gate1": flightinfo['gate'],
-                "code2": flightinfo['dest'],
-                "gate2": flightinfo['dest_gate']
-              })
-              processed_flights.append(num)
+                if num in processed_flights: continue
+                out.append({
+                    "number": num,
+                    "size": flightinfo['size'],
+                    "code1": code1,
+                    "gate1": flightinfo['gate'],
+                    "code2": flightinfo['dest'],
+                    "gate2": flightinfo['dest_gate']
+                })
+                processed_flights.append(num)
+        out.sort(key=lambda x: int(x['number'][2:]))
         return out

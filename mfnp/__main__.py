@@ -7,9 +7,14 @@ import blessed
 term = blessed.Terminal()
 
 def main():
-    from __init__ import __version__
-    from getconfig import get_config
-    from run import run
+    try:
+        from __init__ import __version__
+        from getconfig import get_config
+        from run import run
+    except ModuleNotFoundError:
+        from mfnp import __version__
+        from mfnp.getconfig import get_config
+        from mfnp.run import run
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help='task to run', dest="task")
 
