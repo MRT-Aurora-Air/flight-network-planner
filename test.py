@@ -19,7 +19,7 @@ with open("testconfig.yml", "r") as f:
     config = yaml.safe_load(f)
 config['gates'] = in_
 
-out = mfnp.run(config)
+out = mfnp.run(config, verbosity=1)
 with open("plan.json", "w") as f:
     json.dump(out, f, indent=2)
     f.close()

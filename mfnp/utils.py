@@ -13,12 +13,12 @@ term = blessed.Terminal()
 
 def _warn(content: str, nowarn: bool, **kwargs):
     if not nowarn:
-        print(term.yellow(content), **kwargs)
+        print(term.yellow(content), **kwargs, flush=True)
 
 def _log(content: str, level: int, verbosity: int, **kwargs):
     if verbosity >= level:
         colour = term.white if level == 0 else term.bright_black if level == 1 else term.white
-        print(colour(content), **kwargs)
+        print(colour(content), **kwargs, flush=True)
 
 def _gcm(input_: Any, options: Iterable) -> str:
     return ', '.join(difflib.get_close_matches(input_, options))

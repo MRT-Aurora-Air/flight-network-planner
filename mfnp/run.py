@@ -27,12 +27,16 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
     # get data from the transit sheet
     data, airports = utils.get_flight_data(verbosity=verbosity, nocache=nocache)
 
+    utils._log("Preprocessing data", 0, verbosity)
+
     # throw out ignored airlines
+    utils._log("Throwing out ignored airlines", 1, verbosity)
     for airline in config['ignored_airlines']:
         if airline in data: del data[airline]
         else: utils._warn(f"Airline `{airline}` doesn't exist, maybe you mean: {utils._gcm(airline, data.keys())}", nowarn)
 
     # double-check all airport codes
+    utils._log("Double-checking airport codes", 1, verbosity)
     for code in config['gates'].keys():
         if code not in airports:
             utils._warn(f"Airport `{code}` doesn't exist, maybe you mean: {utils._gcm(code, airports)}", nowarn)
@@ -42,11 +46,13 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
     config['hubs'] = list(filter(lambda c: c in config['gates'].keys(), config['hubs']))
 
     # ensure that flight numbers are allocated for hubs
+    utils._log("Ensuring flight number allocations for hubs", 1, verbosity)
     for hub in config['hubs']:
       if hub not in config['range_h2n']:
         raise ValueError(f"Flight number range not specified for hub `{hub}`")
 
     # == Plan the flights ==
+    utils._log("Planning flights", 0, verbosity)
     flight_plan = {} # {airport_code: {flight_num: {gate: XXX, dest: XXX, dest_gate: XXX, size: X}}}
     flight_nums = []
     nonhubs = [g for g in config['gates'].keys() if g not in config['hubs']]
@@ -71,17 +77,6 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
             if config['airline_code']+str(num) not in flight_nums: 
                yield config['airline_code']+str(num)
         utils._warn(f"Not enough flight numbers for {mode} flights" + (f" from {code_}" if code_ else ""), nowarn)
-
-    '''def get_gate(c1: str, c2: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-        for g1 in gates[c1]:
-            for g2 in gates[c2]:
-                if g1['size'] == g2['size'] and g1['capacity'] > 0 and g2['capacity'] > 0:
-                    g1['capacity'] -= 1
-                    g2['capacity'] -= 1
-                    g1['dests'].append(g2)
-                    g2['dests'].append(g1)
-                    return g1['size'], g1['code'], g2['code']
-        return None, None, None'''
 
     def get_gate(c1: str, c2: str, exist_ok: bool=False) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         if not exist_ok and flight_already_exists(c1, c2):
@@ -112,6 +107,7 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
     for exist_ok in [True, False]:
         # hub-to-nonhub flights
         for code1 in config['hubs']:
+            utils._log(f"Processing H2N flights ({'existing' if exist_ok else 'non-existing'}) for {code1}", 0, verbosity)
             flight_nums_h2n = flight_num_generator('h2n', code_=code1)
             for code2 in nonhubs:
                 if not flight_already_exists(code1, code2):
@@ -131,9 +127,11 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                             "dest_gate": dest_gate,
                             "size": size
                         }
+                        utils._log(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})", 1, verbosity)
 
         # hub-to-hub flights
         flight_nums_h2h = flight_num_generator('h2h')
+        utils._log(f"Processing H2H flights ({'existing' if exist_ok else 'non-existing'})", 0, verbosity)
         for code1, code2 in itertools.combinations(config['hubs'], 2):
             if not flight_already_exists(code1, code2):
                 size, gate1, gate2 = get_gate(code1, code2, exist_ok=exist_ok)
@@ -153,9 +151,11 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                         "dest_gate": dest_gate,
                         "size": size
                     }
+                    utils._log(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})", 1, verbosity)
 
         # nonhub-to-nonhub flights
         flight_nums_n2n = flight_num_generator('n2n')
+        utils._log(f"Processing N2N flights ({'existing' if exist_ok else 'non-existing'})", 0, verbosity)
         for code1, code2 in itertools.combinations(nonhubs, 2):
             if not flight_already_exists(code1, code2):
                 size, gate1, gate2 = get_gate(code1, code2, exist_ok=exist_ok)
@@ -174,8 +174,9 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                         "dest_gate": dest_gate,
                         "size": size
                     }
+                    utils._log(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})", 1, verbosity)
 
-    print(json.dumps(flight_plan, indent=2))
+    utils._log("Network planning complete", 0, verbosity)
     
     # == convert to flight list ==
     if output_format == 'json':
@@ -194,4 +195,20 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                 })
                 processed_flights.append(num)
         out.sort(key=lambda x: int(x['number'][2:]))
-        return out
+    
+    if verbosity >= 1:
+        emptygates = []
+        fullgates = []
+        for code, gates in gates.items():
+            for gateinfo in gates:
+                if gateinfo['capacity'] == 6:
+                    emptygates.append(f"{code} gate {gateinfo['code']}")
+                elif gateinfo['capacity'] == 0:
+                    fullgates.append(f"{code} gate {gateinfo['code']}")
+
+        print(term.yellow(f"== Flight network stats =="))
+        print(term.yellow(f"Flight:Destination ratio: {len(out) / len(gates)}"))
+        print(term.yellow(f"Empty gates: {', '.join(emptygates)}"))
+        print(term.yellow(f"Full gates: {', '.join(fullgates)}"))
+
+    return out
