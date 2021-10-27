@@ -71,6 +71,6 @@ gates:
 # hard_max: The hard maximum number of warps in a plane. No plane will go past this number of warps.
 # max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
-hard_max: 5
-max_h2n: 3
-max_n2n: 1
+hard_max: 4
+max_h2n: 2
+max_n2n: 2
