@@ -46,3 +46,11 @@ gates:
       size: S
     - code: A2
       size: S
+      
+# == Warp limits ==
+# hard_max: The hard maximum number of warps in a plane. No plane will go past this number of warps.
+# max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
+# max_n2n: The maximum number of n2n warps in a plane.
+hard_max: 6
+max_h2n: 6
+max_n2n: 6

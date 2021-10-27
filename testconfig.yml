@@ -9,7 +9,7 @@ airline_code: AR
 # == Handling existing flights ==
 # Flight data is pulled from the MRT Transit sheet.
 # ignored_airlines: The airlines to be ignored on the sheet (default: the value in airline_name)
-ignored_airlines: ["KaloroAir", "FlyLumeva", "FlySubway", "MRTHS Air"]
+ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air"]
 
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
@@ -66,3 +66,11 @@ gates:
   NMW:
     - code: D1
       size: M
+      
+# == Warp limits ==
+# hard_max: The hard maximum number of warps in a plane. No plane will go past this number of warps.
+# max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
+# max_n2n: The maximum number of n2n warps in a plane.
+hard_max: 5
+max_h2n: 3
+max_n2n: 1

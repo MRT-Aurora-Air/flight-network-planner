@@ -59,7 +59,7 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
     gates = config['gates'].copy() # {airport_code: [{code: XXX, size: XXX, capacity: XXX, dests: [XXX, ...]}, ...]}
     for gate_set in gates.values():
         for gate in gate_set:
-            gate['capacity'] = 6
+            gate['capacity'] = config['hard_max']
             gate['dests'] = []
 
     def flight_already_exists(c1: str, c2: str) -> bool:
@@ -78,23 +78,55 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                yield config['airline_code']+str(num)
         utils._warn(f"Not enough flight numbers for {mode} flights" + (f" from {code_}" if code_ else ""), nowarn)
 
+    def get_connection_type(origin: str, dests: list[str]) -> dict[str, int]:
+        out = {
+          "h2h": 0,
+          "h2n": 0,
+          "n2n": 0
+        }
+        for dest in dests:
+            if dest in config['hubs']:
+                if origin in config['hubs']:
+                    out["h2h"] += 1
+                else:
+                    out["h2n"] += 1
+            else:
+                if origin in config['hubs']:
+                    out["h2n"] += 1
+                else:
+                    out["h2n"] += 1
+        return out
+              
     def get_gate(c1: str, c2: str, exist_ok: bool=False) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         if not exist_ok and flight_already_exists(c1, c2):
             return None, None, None
         g1s = gates[c1][:]
         g2s = gates[c2][:]
+        c1_is_hub = c1 not in nonhubs
+        c2_is_hub = c2 not in nonhubs
         for gs in [g1s, g2s]:
             for g in gs:
                 g['score'] = 0
+                if len(g['dests']) == 0:
+                  g['score'] = config['hard_max']//2
                 for dest in g['dests']:
                     if not flight_already_exists(g, dest):
                         g['score'] += 1
+                c = c1 if gs is g1s else c2
+                con_types = get_connection_type(c, g["dests"])
+                if c in nonhubs:
+                    if con_types['h2n'] > config['max_h2n'] and ((c1_is_hub and not c2_is_hub) or (not c1_is_hub and c2_is_hub)):
+                        g['score'] -= 4*(con_types['h2n'] - config['max_h2n'])
+                    if con_types['n2n'] > config['max_n2n'] and (not c1_is_hub and not c2_is_hub):
+                        g['score'] -= 4*(con_types['n2n'] - config['max_n2n'])
+                
         combis = []
         for g1 in g1s:
             for g2 in g2s:
                 combis.append((g1, g2))
         combis.sort(key=lambda x: x[0]['score']+x[1]['score'], reverse=True)
         for g1, g2 in combis:
+            if g1['score']+g2['score'] < 0: continue
             if g1['size'] == g2['size'] and g1['capacity'] > 0 and g2['capacity'] > 0:
                 g1['capacity'] -= 1
                 g2['capacity'] -= 1
@@ -104,7 +136,7 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
         return None, None, None
         
 
-    for exist_ok in [True, False]:
+    for exist_ok in [False, True]:
         # hub-to-nonhub flights
         for code1 in config['hubs']:
             utils._log(f"Processing H2N flights ({'existing' if exist_ok else 'non-existing'}) for {code1}", 0, verbosity)
@@ -116,6 +148,8 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                     try:
                         flight_num1 = next(flight_nums_h2n)
                         flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_h2n)
+                        flight_nums.append(flight_num1)
+                        flight_nums.append(flight_num2)
                     except StopIteration:
                         break
                     for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
@@ -163,6 +197,8 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                 try:
                     flight_num1 = next(flight_nums_n2n)
                     flight_num2 = flight_num1 if config['both_dir_same_num'] else next(flight_nums_n2n)
+                    flight_nums.append(flight_num1)
+                    flight_nums.append(flight_num2)
                 except StopIteration:
                     break
                 for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
@@ -201,13 +237,15 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
         fullgates = []
         for code, gates in gates.items():
             for gateinfo in gates:
-                if gateinfo['capacity'] == 6:
+                if gateinfo['capacity'] == config['hard_max']:
                     emptygates.append(f"{code} gate {gateinfo['code']}")
                 elif gateinfo['capacity'] == 0:
                     fullgates.append(f"{code} gate {gateinfo['code']}")
 
         print(term.yellow(f"== Flight network stats =="))
-        print(term.yellow(f"Flight:Destination ratio: {len(out) / len(gates)}"))
+        print(term.yellow(f"Flights: {len(out)}"))
+        print(term.yellow(f"Destinations: {len(config['gates'])}"))
+        print(term.yellow(f"Flight:Destination ratio: {len(out) / len(config['gates'])}"))
         print(term.yellow(f"Empty gates: {', '.join(emptygates)}"))
         print(term.yellow(f"Full gates: {', '.join(fullgates)}"))
 

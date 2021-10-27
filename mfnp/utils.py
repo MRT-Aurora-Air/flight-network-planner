@@ -33,7 +33,7 @@ def cache_flight_data(data: Dict[str, Dict[str, List[str]]], airport_codes: List
             "data": data,
             "airport_codes": airport_codes,
             "timestamp": time.time()
-        }, f)
+        }, f, indent=2)
         f.close()
 
 def get_flight_data(verbosity: int=0, nocache: bool=False) -> Tuple[Dict[str, Dict[str, List[str]]], List[str]]:
