@@ -3,8 +3,8 @@
 # == General ==
 # airline_name: The name of the airline
 # airline_code: The two-letter code that is prefixed to all flight numbers
-airline_name: Aurora Air
-airline_code: AR
+airline_name: Astrella
+airline_code: ""
 
 # == Handling existing flights ==
 # Flight data is pulled from the MRT Transit sheet.
@@ -14,7 +14,7 @@ ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air"]
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: []
+hubs: [LAR, EEA, TBI, CIA, FYI, KTI, VDA, WMI, PCE]
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -25,18 +25,17 @@ hub_threshold: 5
 #   XXX: [...]: XXX is the hub's airport code
 # both_dir_same_num: Whether flights use the same number for both directions
 range_h2h: [[1, 100]]
-range_n2n: [[1101, 1200]]
+range_n2n: [[1001, 1100]]
 range_h2n:
-  CIA: [[101, 200]]
-  DFM: [[201, 300]]
-  DJE: [[301, 400]]
-  EEA: [[401, 500]]
-  LAR: [[501, 600]]
-  OPA: [[601, 700]]
-  SEG: [[701, 800]]
-  TBI: [[801, 900]]
-  VDA: [[901, 1000]]
-  PCE: [[1001, 1100]]
+  LAR: [[101, 200]]
+  EEA: [[201, 300]]
+  TBI: [[301, 400]]
+  CIA: [[401, 500]]
+  FYI: [[501, 600]]
+  KTI: [[601, 700]]
+  VDA: [[701, 800]]
+  WMI: [[801, 900]]
+  PCE: [[901, 1000]]
 both_dir_same_num: true
 
 # == Gates ==
@@ -72,5 +71,5 @@ gates:
 # max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
 hard_max: 4
-max_h2n: 2
-max_n2n: 2
+max_h2n: 3
+max_n2n: 1

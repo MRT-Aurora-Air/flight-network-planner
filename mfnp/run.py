@@ -230,7 +230,7 @@ def run(config: dict, output_format: str="json", verbosity: int=0, nowarn: bool=
                     "gate2": flightinfo['dest_gate']
                 })
                 processed_flights.append(num)
-        out.sort(key=lambda x: int(x['number'][2:]))
+        out.sort(key=lambda x: int(x['number'][len(config['airline_code']):]))
     
     if verbosity >= 1:
         emptygates = []
