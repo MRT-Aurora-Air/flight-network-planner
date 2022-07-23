@@ -39,7 +39,8 @@ class Config(BaseModel):
     both_dir_same_num: bool
     gate_json: str | None = None
     gates: Dict[AirportCode, List[Gate]]
-    hard_max: int
+    hard_max_hub: int
+    hard_max_nonhub: int
     max_h2n: int
     max_n2n: int
 

@@ -77,15 +77,16 @@ def get_gate(
 ) -> Tuple[str | None, str | None, str | None]:
     if flight_already_exists(data1, data2, c1, c2, exist_ok):
         return None, None, None
-    g1s = gates[c1][:]
-    g2s = gates[c2][:]
+    g1s = gates[c1]
+    g2s = gates[c2]
     c1_is_hub = c1 not in nonhubs
     c2_is_hub = c2 not in nonhubs
     for gs in [g1s, g2s]:
         for g in gs:
             g.score = 0
             if len(g.dests) == 0:
-                g.score = config.hard_max // 2
+                is_hub = c1_is_hub if g1s is gs else c2_is_hub
+                g.score = (config.hard_max_hub if is_hub else config.hard_max_nonhub) // 2
             for dest in g.dests:
                 if not flight_already_exists(data1, data2, g.code, dest, exist_ok):
                     g.score += 1
@@ -173,11 +174,12 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
     flight_nums: list[utils.FlightNumber] = []
     nonhubs = [g for g in config.gates.keys() if g not in config.hubs]
     gates: dict[str, list[utils.Gate]] = config.gates.copy()
-    for gate_set in gates.values():
+    for code, gate_set in gates.items():
         for gate in gate_set:
-            gate.capacity = config.hard_max
+            gate.capacity = config.hard_max_nonhub if code in nonhubs else config.hard_max_hub
             gate.dests = []
 
+    num_dupes = 0
     for exist_ok in [False, True]:
         # hub-to-non-hub flights
         for code1 in config.hubs:
@@ -225,8 +227,9 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                             size=size,
                         )
                     )
+                    if exist_ok: num_dupes += 1
                     utils._debug(
-                        f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
+                        f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                     )
 
         # hub-to-hub flights
@@ -270,11 +273,12 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                         size=size,
                     )
                 )
+                if exist_ok: num_dupes += 1
                 utils._debug(
-                    f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
+                    f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                 )
 
-        # nonhub-to-nonhub flights
+        # non-hub-to-non-hub flights
         flight_nums_n2n = flight_num_generator(config, flight_nums, "n2n")
         utils._log(
             f"Processing N2N flights ({'existing' if exist_ok else 'non-existing'})"
@@ -315,8 +319,9 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                         size=size,
                     )
                 )
+                if exist_ok: num_dupes += 1
                 utils._debug(
-                    f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
+                    f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                 )
 
     utils._log("Network planning complete")
@@ -339,13 +344,14 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                 }
             )
             processed_flights.append(code)
-        out.sort(key=lambda x: int(x["number"][len(config.airline_code) :]))
+        out.sort(key=lambda x: int(x["number"][len(config.airline_code):]))
 
+    # == Print stats ==
     emptygates = []
     fullgates = []
     for code, gates in gates.items():
         for gate in gates:
-            if gate.capacity == config.hard_max:
+            if gate.capacity >= (config.hard_max_nonhub if code in nonhubs else config.hard_max_hub):
                 emptygates.append(f"{code} gate {gate.code}")
             elif gate.capacity == 0:
                 fullgates.append(f"{code} gate {gate.code}")
@@ -353,8 +359,9 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
     print(term.yellow(f"== Flight network stats =="))
     print(term.yellow(f"Flights: {len(out)}"))
     print(term.yellow(f"Destinations: {len(config.gates)}"))
-    print(term.yellow(f"Flight:Destination ratio: {len(out) / len(config.gates)}"))
+    print(term.yellow(f"Flight:Destination ratio: {len(out) / len(config.gates):.2f}"))
     print(term.yellow(f"Empty gates: {', '.join(emptygates)}"))
     print(term.yellow(f"Full gates: {', '.join(fullgates)}"))
+    print(term.yellow(f"Duplicate flights: {num_dupes} ({num_dupes/len(out):.2%})"))
 
     return out

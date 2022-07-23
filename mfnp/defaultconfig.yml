@@ -20,8 +20,8 @@ hub_threshold: 5
 # == Flight naming scheme ==
 # For range_XXX values, give ranges as [[min1, max1], [min2, max2], ...]
 # range_h2h: The range of flight numbers for hub-to-hub flights
-# range_n2n: The range of flight numbers for nonhub-to-nonhub flights
-# range_h2n: The range of flight numbers for hub-to-nonhub flights
+# range_n2n: The range of flight numbers for non-hub-to-non-hub flights
+# range_h2n: The range of flight numbers for hub-to-non-hub flights
 #   XXX: [...]: XXX is the hub's airport code
 # both_dir_same_num: Whether flights use the same number for both directions
 range_h2h: [[1, 100]]
@@ -48,9 +48,11 @@ gates:
       size: S
       
 # == Warp limits ==
-# hard_max: The hard maximum number of warps in a plane. No plane will go past this number of warps.
-# max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
+# hard_max_hub: The hard maximum number of warps in a plane for hub airports. No plane will go past this number of warps.
+# hard_max_hub: The hard maximum number of warps in a plane for non-hub airports. No plane will go past this number of warps.
+# max_h2n: The maximum number of h2n warps in a plane. Applies to non-hubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
-hard_max: 6
+hard_max_hub: 6
+hard_max_nonhub: 6
 max_h2n: 6
 max_n2n: 6
