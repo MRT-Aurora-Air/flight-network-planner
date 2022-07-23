@@ -1,23 +1,17 @@
 import argparse
 import json
-import yaml
 
 import blessed
 
 from mfnp.utils import Config
+from mfnp import __version__
+from mfnp.getconfig import get_config
+from mfnp.run import run
 
 term = blessed.Terminal()
 
 
 def main():
-    try:
-        from __init__ import __version__
-        from getconfig import get_config
-        from run import run
-    except ModuleNotFoundError:
-        from mfnp import __version__
-        from mfnp.getconfig import get_config
-        from mfnp.run import run
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="task to run", dest="task")
 
@@ -74,14 +68,10 @@ def main():
     elif args.task == "getconfig":
         get_config(args.output, force=args.force)
     elif args.task == "run":
-        with open(args.file, "r") as f:
-            config = yaml.safe_load(f)
-            config = Config.parse_file(config)
-            f.close()
+        config = Config.parse_file(args.file)
         output = run(config, output_format=args.format, nocache=args.nocache)
         with open(args.output + ".json", "w") as f:
             json.dump(output, f, indent=2)
-            f.close()
     else:
         parser.print_help()
 
