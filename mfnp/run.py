@@ -9,10 +9,10 @@ term = blessed.Terminal()
 
 import mfnp.utils as utils
 
-def flight_already_exists(data1: utils._FlightData, data2: list[utils.FlightRoute], c1: str, c2: str) -> bool:
+def flight_already_exists(data1: utils._FlightData, data2: list[utils.FlightRoute], c1: str, c2: str, dupe_ok: bool = False) -> bool:
     for flight_set in data1.values():
         for flight_flights in flight_set.values():
-            if c1 in flight_flights and c2 in flight_flights:
+            if c1 in flight_flights and c2 in flight_flights and not dupe_ok:
                 return True
     for flight in data2:
         if flight.orig == c1 and flight.dest == c2:
@@ -54,7 +54,7 @@ def get_connection_type(config: utils.Config, origin: str, dests: list[str]) -> 
 def get_gate(config: utils.Config, gates: dict[str, list[utils.Gate]], nonhubs: list[utils.AirportCode],
              data1: utils._FlightData, data2: list[utils.FlightRoute],
              c1: str, c2: str, exist_ok: bool = False) -> Tuple[str | None, str | None, str | None]:
-    if not exist_ok and flight_already_exists(data1, data2, c1, c2):
+    if flight_already_exists(data1, data2, c1, c2, exist_ok):
         return None, None, None
     g1s = gates[c1][:]
     g2s = gates[c2][:]
@@ -66,7 +66,7 @@ def get_gate(config: utils.Config, gates: dict[str, list[utils.Gate]], nonhubs: 
             if len(g.dests) == 0:
                 g.score = config.hard_max // 2
             for dest in g.dests:
-                if not flight_already_exists(data1, data2, g.code, dest):
+                if not flight_already_exists(data1, data2, g.code, dest, exist_ok):
                     g.score += 1
             c = c1 if gs is g1s else c2
             con_types = get_connection_type(config, c, g.dests)
@@ -148,79 +148,76 @@ def run(config: utils.Config, output_format: str= "json", nocache: bool=False):
             utils._log(f"Processing H2N flights ({'existing' if exist_ok else 'non-existing'}) for {code1}")
             flight_nums_h2n = flight_num_generator(config, flight_nums, 'h2n', code_=code1)
             for code2 in nonhubs:
-                if not flight_already_exists(data, flight_plan, code1, code2):
-                    size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
-                    if size is None: continue
-                    try:
-                        flight_num1 = next(flight_nums_h2n)
-                        flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_h2n)
-                        flight_nums.append(flight_num1)
-                        flight_nums.append(flight_num2)
-                    except StopIteration:
-                        break
-                    for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
-                                                                             (code2, code1, gate2, gate1, flight_num2)]:
-                        flight_plan.append(utils.FlightRoute(
-                            code=flight_num,
-                            orig=origin,
-                            orig_gate=origin_gate,
-                            dest=dest,
-                            dest_gate=dest_gate,
-                            size=size,
-                        ))
-                        utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
+                size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
+                if size is None: continue
+                try:
+                    flight_num1 = next(flight_nums_h2n)
+                    flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_h2n)
+                    flight_nums.append(flight_num1)
+                    flight_nums.append(flight_num2)
+                except StopIteration:
+                    break
+                for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
+                                                                         (code2, code1, gate2, gate1, flight_num2)]:
+                    flight_plan.append(utils.FlightRoute(
+                        code=flight_num,
+                        orig=origin,
+                        orig_gate=origin_gate,
+                        dest=dest,
+                        dest_gate=dest_gate,
+                        size=size,
+                    ))
+                    utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
 
         # hub-to-hub flights
         flight_nums_h2h = flight_num_generator(config, flight_nums, 'h2h')
         utils._log(f"Processing H2H flights ({'existing' if exist_ok else 'non-existing'})")
         for code1, code2 in itertools.combinations(config.hubs, 2):
-            if not flight_already_exists(data, flight_plan, code1, code2):
-                size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
-                if size is None: continue
-                try:
-                    flight_num1 = next(flight_nums_h2h)
-                    flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_h2h)
-                    flight_nums.append(flight_num1)
-                    flight_nums.append(flight_num2)
-                except StopIteration:
-                    break
-                for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
-                                                                         (code2, code1, gate2, gate1, flight_num2)]:
-                    flight_plan.append(utils.FlightRoute(
-                        code=flight_num,
-                        orig=origin,
-                        orig_gate=origin_gate,
-                        dest=dest,
-                        dest_gate=dest_gate,
-                        size=size,
-                    ))
-                    utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
+            size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
+            if size is None: continue
+            try:
+                flight_num1 = next(flight_nums_h2h)
+                flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_h2h)
+                flight_nums.append(flight_num1)
+                flight_nums.append(flight_num2)
+            except StopIteration:
+                break
+            for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
+                                                                     (code2, code1, gate2, gate1, flight_num2)]:
+                flight_plan.append(utils.FlightRoute(
+                    code=flight_num,
+                    orig=origin,
+                    orig_gate=origin_gate,
+                    dest=dest,
+                    dest_gate=dest_gate,
+                    size=size,
+                ))
+                utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
 
         # nonhub-to-nonhub flights
         flight_nums_n2n = flight_num_generator(config, flight_nums, 'n2n')
         utils._log(f"Processing N2N flights ({'existing' if exist_ok else 'non-existing'})")
         for code1, code2 in itertools.combinations(nonhubs, 2):
-            if not flight_already_exists(data, flight_plan, code1, code2):
-                size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
-                if size is None: continue
-                try:
-                    flight_num1 = next(flight_nums_n2n)
-                    flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_n2n)
-                    flight_nums.append(flight_num1)
-                    flight_nums.append(flight_num2)
-                except StopIteration:
-                    break
-                for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
-                                                                         (code2, code1, gate2, gate1, flight_num2)]:
-                    flight_plan.append(utils.FlightRoute(
-                        code=flight_num,
-                        orig=origin,
-                        orig_gate=origin_gate,
-                        dest=dest,
-                        dest_gate=dest_gate,
-                        size=size,
-                    ))
-                    utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
+            size, gate1, gate2 = get_gate(config, gates, nonhubs, data, flight_plan, code1, code2, exist_ok=exist_ok)
+            if size is None: continue
+            try:
+                flight_num1 = next(flight_nums_n2n)
+                flight_num2 = flight_num1 if config.both_dir_same_num else next(flight_nums_n2n)
+                flight_nums.append(flight_num1)
+                flight_nums.append(flight_num2)
+            except StopIteration:
+                break
+            for origin, dest, origin_gate, dest_gate, flight_num in [(code1, code2, gate1, gate2, flight_num1),
+                                                                     (code2, code1, gate2, gate1, flight_num2)]:
+                flight_plan.append(utils.FlightRoute(
+                    code=flight_num,
+                    orig=origin,
+                    orig_gate=origin_gate,
+                    dest=dest,
+                    dest_gate=dest_gate,
+                    size=size,
+                ))
+                utils._debug(f"{flight_num1} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})")
 
     utils._log("Network planning complete")
     
