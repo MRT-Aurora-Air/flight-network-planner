@@ -14,7 +14,7 @@ ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air"]
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: [LAR, EEA, TBI, CIA, FYI, KTI, VDA, WMI, PCE]
+hubs: [PCE, CIA, LAR, EEA, TBI, FYI, KTI, VDA, WMI]
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -71,5 +71,5 @@ gates:
 # max_h2n: The maximum number of h2n warps in a plane. Applies to nonhubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
 hard_max: 4
-max_h2n: 3
+max_h2n: 4
 max_n2n: 1

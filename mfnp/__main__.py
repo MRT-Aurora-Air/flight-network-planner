@@ -4,6 +4,8 @@ import yaml
 
 import blessed
 
+from mfnp.utils import Config
+
 term = blessed.Terminal()
 
 def main():
@@ -28,9 +30,6 @@ def main():
     p_run.add_argument('file', type=str, help="The name of the configuration file to read from")
     p_run.add_argument('-o', '--output', type=str, help="The file to output, excluding the file extension", default="plan")
     p_run.add_argument('-f', '--format', type=str, help="The format to output results as", default="json", choices=['json', 'yaml', 'txt'])
-    p_run.add_argument('-v', '--verbose', help="Makes planner output more info", action='count', default=0)
-    p_run.add_argument('-q', '--quiet', help="Makes planner output less info", action='count', default=0)
-    p_run.add_argument('-nw', '--nowarn', help="Suppress warnings", action="store_true")
     p_run.add_argument('-nc', '--nocache', help="Do not cache data from external sources", action="store_true")
 
     args = parser.parse_args()
@@ -43,8 +42,9 @@ def main():
     elif args.task == "run":
         with open(args.file, "r") as f:
             config = yaml.safe_load(f)
+            config = Config.parse_file(config)
             f.close()
-        output = run(config, output_format=args.format, verbosity=args.verbose-args.quiet, nowarn=args.nowarn, nocache=args.nocache)
+        output = run(config, output_format=args.format, nocache=args.nocache)
         with open(args.output+".json", "w") as f:
             json.dump(output, f, indent=2)
             f.close()

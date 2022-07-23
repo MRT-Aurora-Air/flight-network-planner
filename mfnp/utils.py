@@ -1,29 +1,68 @@
+from __future__ import annotations
+
 import difflib
 import os
-import sys
 import time
 
 import requests
 import json
-from typing import List, Tuple, Iterable, Any, Dict
+from typing import Iterable, TypeVar, TypeAlias, Tuple, Dict, List
 
 import blessed
+from pydantic import BaseModel
 
 term = blessed.Terminal()
 
-def _warn(content: str, nowarn: bool, **kwargs):
-    if not nowarn:
-        print(term.yellow(content), **kwargs, flush=True)
+AirlineName: TypeAlias = str
+FlightNumber: TypeAlias = int
+AirportCode: TypeAlias = str
+_FlightData: TypeAlias = Dict[AirlineName, Dict[FlightNumber, List[AirportCode]]]
 
-def _log(content: str, level: int, verbosity: int, **kwargs):
-    if verbosity >= level:
-        colour = term.white if level == 0 else term.bright_black if level == 1 else term.white
-        print(colour(content), **kwargs, flush=True)
+class Gate(BaseModel):
+    code: str
+    size: str
+    capacity: int | None = None
+    dests: List[AirportCode] | None = None
+    score: int | None = None
 
-def _gcm(input_: Any, options: Iterable) -> str:
+class Config(BaseModel):
+    airline_name: AirlineName
+    airline_code: str
+    ignored_airlines: List[AirlineName]
+    hubs: List[AirportCode]
+    hub_threshold: int | None = None
+    range_h2h: List[Tuple[FlightNumber, FlightNumber]]
+    range_n2n: List[Tuple[FlightNumber, FlightNumber]]
+    range_h2n: Dict[AirportCode, List[Tuple[FlightNumber, FlightNumber]]]
+    both_dir_same_num: bool
+    gate_json: str | None = None
+    gates: Dict[AirportCode, List[Gate]]
+    hard_max: int
+    max_h2n: int
+    max_n2n: int
+
+class FlightRoute(BaseModel):
+    code: AirportCode
+    orig: AirportCode
+    orig_gate: str
+    dest: AirportCode
+    dest_gate: str
+    size: str
+
+def _warn(content: str, **kwargs):
+    print(term.yellow(content), **kwargs, flush=True)
+
+def _log(content: str, **kwargs):
+    print(term.white(content), **kwargs, flush=True)
+        
+def _debug(content: str, **kwargs):
+    print(term.bright_black(content), **kwargs, flush=True)
+
+_T = TypeVar('_T')
+def _gcm(input_: _T, options: Iterable[_T]) -> str:
     return ', '.join(difflib.get_close_matches(input_, options))
 
-def cache_flight_data(data: Dict[str, Dict[str, List[str]]], airport_codes: List[str]):
+def cache_flight_data(data: _FlightData, airport_codes: List[AirportCode]):
     try:
         os.mkdir(os.path.dirname(__file__)+'/.cache')
     except FileExistsError:
@@ -34,28 +73,26 @@ def cache_flight_data(data: Dict[str, Dict[str, List[str]]], airport_codes: List
             "airport_codes": airport_codes,
             "timestamp": time.time()
         }, f, indent=2)
-        f.close()
 
-def get_flight_data(verbosity: int=0, nocache: bool=False) -> Tuple[Dict[str, Dict[str, List[str]]], List[str]]:
+def get_flight_data(nocache: bool=False) -> Tuple[_FlightData, List[str]]:
     # check cache
     try:
         with open(os.path.dirname(__file__) + "/.cache/flights.json", "r") as f:
             j = json.load(f)
             if time.time() - j['timestamp'] <= 60 and not nocache:
-                f.close()
-                _log("Retrieved raw flight data from cache", 0, verbosity)
+                _log("Retrieved raw flight data from cache")
                 return j['data'], j['airport_codes']
-            f.close()
     except FileNotFoundError:
         pass
-    _log("Retrieving raw flight data... ", 0, verbosity, end="")
+
+    _log("Retrieving raw flight data... ", end="")
     raw_airline_data = requests.get("https://sheets.googleapis.com/v4/spreadsheets/1wzvmXHQZ7ee7roIvIrJhkP6oCegnB8-nefWpd8ckqps/values/Airline+Class+Distribution?key=AIzaSyCCRZqIOAVfwBNUofWbrkz0q5z4FUaCUyE")
     raw_airline_data = json.loads(raw_airline_data.text)['values']
     raw_seaplane_data = requests.get("https://sheets.googleapis.com/v4/spreadsheets/1wzvmXHQZ7ee7roIvIrJhkP6oCegnB8-nefWpd8ckqps/values/Seaplane+Class+Distribution?key=AIzaSyCCRZqIOAVfwBNUofWbrkz0q5z4FUaCUyE")
     raw_seaplane_data = json.loads(raw_seaplane_data.text)['values']
-    _log("retrieved", 0, verbosity)
+    _log("retrieved")
 
-    data = {} # {airline_name: {flight_num: [ABC, DEF]}}
+    data: _FlightData = {}
     airport_codes = []
     num_of_empty_codes = 0
     for raw_data in [raw_airline_data, raw_seaplane_data]:
@@ -70,9 +107,9 @@ def get_flight_data(verbosity: int=0, nocache: bool=False) -> Tuple[Dict[str, Di
                 airport_code = "??#"+str(num_of_empty_codes)
                 num_of_empty_codes += 1
             airport_codes.append(airport_code)
-            _log(f"Processing {airport_code}", 1, verbosity)
+            _debug(f"Processing {airport_code}")
             for index, airport_flights in enumerate(raw_data[cursor]): # iterate through airlines
-                if airlines[index] != "" and airport_flights != "": # if it isnt empty, there are flights
+                if airlines[index] != "" and airport_flights != "": # if it isn't empty, there are flights
                     airline_name = airlines[index]
                     airline_flights = list(map(lambda num: num.strip(), airport_flights.split(',')))
                     if airline_name not in data: data[airline_name] = {}
@@ -80,6 +117,7 @@ def get_flight_data(verbosity: int=0, nocache: bool=False) -> Tuple[Dict[str, Di
                         if flight not in data[airline_name]: data[airline_name][flight] = []
                         data[airline_name][flight].append(airport_code)
             cursor += 1
-    _log("Flight data processed", 0, verbosity)
+
+    _log("Flight data processed")
     cache_flight_data(data, airport_codes)
     return data, airport_codes
