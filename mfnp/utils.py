@@ -43,6 +43,12 @@ class Config(BaseModel):
     hard_max_nonhub: int
     max_h2n: int
     max_n2n: int
+    restricted_between: List[List[AirportCode]]
+    restricted_to: Dict[AirportCode, List[AirportCode]]
+    preferred_between: List[List[AirportCode]]
+    preferred_to: Dict[AirportCode, List[AirportCode]]
+    gate_restrictions_allowed: Dict[AirportCode, Dict[str, List[AirportCode]]]
+    gate_restrictions_not_allowed: Dict[AirportCode, Dict[str, List[AirportCode]]]
 
 
 class FlightRoute(BaseModel):

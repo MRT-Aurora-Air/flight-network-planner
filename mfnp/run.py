@@ -86,30 +86,63 @@ def get_gate(
             g.score = 0
             if len(g.dests) == 0:
                 is_hub = c1_is_hub if g1s is gs else c2_is_hub
-                g.score = (config.hard_max_hub if is_hub else config.hard_max_nonhub) // 2
+                g.score = (
+                    config.hard_max_hub if is_hub else config.hard_max_nonhub
+                ) // 2
             for dest in g.dests:
-                if not flight_already_exists(data1, data2, g.code, dest, exist_ok):
+                if not flight_already_exists(data1, data2, g.code, dest):
                     g.score += 1
             c = c1 if gs is g1s else c2
             con_types = get_connection_type(config, c, g.dests)
             if c in nonhubs:
-                if con_types["h2n"] >= config.max_h2n and (
-                    (c1_is_hub and not c2_is_hub) or (not c1_is_hub and c2_is_hub)
-                ):
+                if con_types["h2n"] >= config.max_h2n and c1_is_hub != c2_is_hub:
                     g.score -= 4 * (con_types["h2n"] - config.max_h2n + 1)
-                if con_types["n2n"] >= config.max_n2n and (
-                    not c1_is_hub and not c2_is_hub
-                ):
+                if con_types["n2n"] >= config.max_n2n and not (c1_is_hub or c2_is_hub):
                     g.score -= 4 * (con_types["n2n"] - config.max_n2n + 1)
 
     combis = []
     for g1 in g1s:
         for g2 in g2s:
-            combis.append((g1, g2))
-    combis.sort(key=lambda x: x[0].score + x[1].score, reverse=True)
-    for g1, g2 in combis:
-        if g1.score + g2.score < 0:
-            continue
+            score = g1.score + g2.score
+            if (
+                any(c1 in x and c2 in x for x in config.restricted_between)
+                or (c1 in config.restricted_to and c2 in config.restricted_to[c1])
+                or (c2 in config.restricted_to and c1 in config.restricted_to[c2])
+            ):
+                score -= 100
+            if (
+                any(c1 in x and c2 in x for x in config.preferred_between)
+                or (c1 in config.preferred_to and c2 in config.preferred_to[c1])
+                or (c2 in config.preferred_to and c1 in config.preferred_to[c2])
+            ):
+                score += 10
+            if (
+                (
+                    c1 in config.gate_restrictions_allowed
+                    and g1.code in config.gate_restrictions_allowed[c1]
+                    and c2 not in config.gate_restrictions_allowed[c1][g1.code]
+                )
+                or (
+                    c2 in config.gate_restrictions_allowed
+                    and g2.code in config.gate_restrictions_allowed[c2]
+                    and c1 not in config.gate_restrictions_allowed[c2][g2.code]
+                )
+                or (
+                    c1 in config.gate_restrictions_allowed
+                    and g1.code in config.gate_restrictions_allowed[c1]
+                    and c2 in config.gate_restrictions_not_allowed[c1][g1.code]
+                )
+                or (
+                    c2 in config.gate_restrictions_allowed
+                    and g2.code in config.gate_restrictions_allowed[c2]
+                    and c1 in config.gate_restrictions_not_allowed[c2][g2.code]
+                )
+            ):
+                score -= 100
+            if score >= 0:
+                combis.append((g1, g2, score))
+    combis.sort(key=lambda x: x[2], reverse=True)
+    for g1, g2, _ in combis:
         if g1.size == g2.size and g1.capacity > 0 and g2.capacity > 0:
             g1.capacity -= 1
             g2.capacity -= 1
@@ -176,7 +209,9 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
     gates: dict[str, list[utils.Gate]] = config.gates.copy()
     for code, gate_set in gates.items():
         for gate in gate_set:
-            gate.capacity = config.hard_max_nonhub if code in nonhubs else config.hard_max_hub
+            gate.capacity = (
+                config.hard_max_nonhub if code in nonhubs else config.hard_max_hub
+            )
             gate.dests = []
 
     num_dupes = 0
@@ -227,7 +262,8 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                             size=size,
                         )
                     )
-                    if exist_ok: num_dupes += 1
+                    if exist_ok:
+                        num_dupes += 1
                     utils._debug(
                         f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                     )
@@ -273,7 +309,8 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                         size=size,
                     )
                 )
-                if exist_ok: num_dupes += 1
+                if exist_ok:
+                    num_dupes += 1
                 utils._debug(
                     f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                 )
@@ -319,7 +356,8 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
                         size=size,
                     )
                 )
-                if exist_ok: num_dupes += 1
+                if exist_ok:
+                    num_dupes += 1
                 utils._debug(
                     f"{flight_num} (size {size}): {origin} ({origin_gate}) -> {dest} ({dest_gate})"
                 )
@@ -351,7 +389,9 @@ def run(config: utils.Config, output_format: str = "json", nocache: bool = False
     fullgates = []
     for code, gates in gates.items():
         for gate in gates:
-            if gate.capacity >= (config.hard_max_nonhub if code in nonhubs else config.hard_max_hub):
+            if gate.capacity >= (
+                config.hard_max_nonhub if code in nonhubs else config.hard_max_hub
+            ):
                 emptygates.append(f"{code} gate {gate.code}")
             elif gate.capacity == 0:
                 fullgates.append(f"{code} gate {gate.code}")

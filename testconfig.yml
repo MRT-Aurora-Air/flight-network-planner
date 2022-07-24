@@ -75,3 +75,34 @@ hard_max_hub: 4
 hard_max_nonhub: 3
 max_h2n: 4
 max_n2n: 1
+
+# == Flight restrictions ==
+# restricted_between: A list of set of airports that cannot be flown between one another.
+# restricted_to: A mapping of airports to a list of destinations that are not able to be flown to.
+# preferred_between: A list of set of airports that are preferred to be flown between one another.
+# preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
+restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE]]
+restricted_to:
+  XXX: []
+preferred_between: [[PCE, SVS]]
+preferred_to:
+  XXX: []
+
+# == Airport restrictions ==
+# gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
+# gate_restrictions_not_allowed: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
+gate_restrictions_allowed:
+  PCE:
+    B1: &pce [SVS, RSA, RSN, GSZ, RSZ, SKA, RED, VIC, RVC, PSD, COA]
+    B2: *pce
+gate_restrictions_not_allowed:
+  XXX:
+    A1: *pce
+    A2: *pce
+    A3: *pce
+    A4: *pce
+    A5: *pce
+    A6: *pce
+    A7: *pce
+    A8: *pce
+    A9: *pce
