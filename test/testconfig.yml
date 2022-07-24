@@ -14,7 +14,7 @@ ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air"]
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: [PCE, CIA, LAR, EEA, TBI, FYI, KTI, VDA, WMI]
+hubs: [PCE, LAR, VDA] # AUR
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -27,15 +27,9 @@ hub_threshold: 5
 range_h2h: [[1, 100]]
 range_n2n: [[1001, 1100]]
 range_h2n:
-  LAR: [[101, 200]]
-  EEA: [[201, 300]]
-  TBI: [[301, 400]]
-  CIA: [[401, 500]]
-  FYI: [[501, 600]]
-  KTI: [[601, 700]]
-  VDA: [[701, 800]]
-  WMI: [[801, 900]]
-  PCE: [[901, 1000]]
+  PCE: [[101, 300]]
+  LAR: [[301, 500]]
+  VDA: [[501, 700]]
 both_dir_same_num: true
 
 # == Gates ==
@@ -46,25 +40,7 @@ both_dir_same_num: true
 #   - code: The code of the gate
 #     size: The size of the gate
 gate_json:
-gates:
-  PCE:
-    - code: A1
-      size: S
-    - code: A2
-      size: S
-  AIX:
-    - code: B1
-      size: S
-    - code: B2
-      size: M
-  TKX:
-    - code: C1
-      size: M
-    - code: C2
-      size: S
-  NMW:
-    - code: D1
-      size: M
+gates: {}
       
 # == Warp limits ==
 # hard_max_hub: The hard maximum number of warps in a plane for hub airports. No plane will go past this number of warps.
@@ -96,7 +72,7 @@ gate_restrictions_allowed:
     B1: &pce [SVS, RSA, RSN, GSZ, RSZ, SKA, RED, VIC, RVC, PSD, COA]
     B2: *pce
 gate_restrictions_not_allowed:
-  XXX:
+  PCE:
     A1: *pce
     A2: *pce
     A3: *pce

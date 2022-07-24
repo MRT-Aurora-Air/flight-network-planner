@@ -128,13 +128,13 @@ def get_gate(
                     and c1 not in config.gate_restrictions_allowed[c2][g2.code]
                 )
                 or (
-                    c1 in config.gate_restrictions_allowed
-                    and g1.code in config.gate_restrictions_allowed[c1]
+                    c1 in config.gate_restrictions_not_allowed
+                    and g1.code in config.gate_restrictions_not_allowed[c1]
                     and c2 in config.gate_restrictions_not_allowed[c1][g1.code]
                 )
                 or (
-                    c2 in config.gate_restrictions_allowed
-                    and g2.code in config.gate_restrictions_allowed[c2]
+                    c2 in config.gate_restrictions_not_allowed
+                    and g2.code in config.gate_restrictions_not_allowed[c2]
                     and c1 in config.gate_restrictions_not_allowed[c2][g2.code]
                 )
             ):
