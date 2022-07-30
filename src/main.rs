@@ -1,9 +1,10 @@
 mod config;
 mod flight_data;
+mod run;
 mod types;
 
-use clap::Parser;
 use crate::flight_data::FlightData;
+use clap::Parser;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
