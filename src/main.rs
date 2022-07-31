@@ -5,6 +5,8 @@ mod types;
 
 use crate::flight_data::FlightData;
 use clap::Parser;
+use crate::config::Config;
+use anyhow::Result;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
@@ -29,14 +31,16 @@ struct Run {
     output: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
     match args.subcmd {
         Subcmd::Run(run) => {
-            println!("{:#?}", FlightData::from_sheets().unwrap());
+            let config: Config = serde_yaml::from_reader(std::fs::File::open(&run.file)?)?;
+            run::run(config)?;
         }
         Subcmd::GetConfig => {
             println!("Hello, world!");
         }
     }
+    Ok(())
 }

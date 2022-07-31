@@ -6,16 +6,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub airline_name: AirlineName,
     pub airline_code: String,
     ignored_airlines: Vec<AirlineName>,
     hubs: Vec<AirportCode>,
     hub_threshold: usize,
-    pub range_h2h: Vec<(AirportCode, AirportCode)>,
-    pub range_n2n: Vec<(AirportCode, AirportCode)>,
-    pub range_h2n: HashMap<AirportCode, Vec<(AirportCode, AirportCode)>>,
+    pub range_h2h: Vec<(FlightNumber, FlightNumber)>,
+    pub range_n2n: Vec<(FlightNumber, FlightNumber)>,
+    pub range_h2n: HashMap<AirportCode, Vec<(FlightNumber, FlightNumber)>>,
     pub both_dir_same_num: bool,
     pub gate_file: PathBuf,
     pub hard_max_hub: u8,
@@ -43,7 +43,7 @@ impl Config {
             .collect())
     }
     pub fn hubs(&mut self) -> Result<Vec<AirportCode>> {
-        Ok(if self.hubs.is_empty() {
+        Ok(if !self.hubs.is_empty() {
             self.hubs.clone()
         } else {
             self.gates()?
@@ -65,11 +65,9 @@ impl Config {
                     Some({
                         let params = l.split(' ').collect::<Vec<_>>();
                         Gate {
-                            airport: params.get(0)?.to_string(),
-                            code: params.get(1)?.to_string(),
-                            size: params.get(2)?.to_string(),
-                            destinations: vec![],
-                            score: 0,
+                            airport: params.get(0)?.trim().to_string(),
+                            code: params.get(1)?.trim().to_string(),
+                            size: params.get(2)?.trim().to_string()
                         }
                     })
                 })

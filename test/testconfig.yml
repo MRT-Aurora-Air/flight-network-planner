@@ -39,7 +39,7 @@ both_dir_same_num: true
 #   XXX: XXX is the hub's airport code
 #   - code: The code of the gate
 #     size: The size of the gate
-gate_json:
+gate_file: test/actualgates.txt
 gates: {}
       
 # == Warp limits ==
@@ -49,6 +49,7 @@ gates: {}
 # max_n2n: The maximum number of n2n warps in a plane.
 hard_max_hub: 4
 hard_max_nonhub: 3
+max_h2h: 2
 max_h2n: 4
 max_n2n: 1
 
@@ -67,11 +68,11 @@ preferred_to:
 # == Airport restrictions ==
 # gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
 # gate_restrictions_not_allowed: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
-gate_restrictions_allowed:
+gate_allowed_dests:
   PCE:
     B1: &pce [SVS, RSA, RSN, GSZ, RSZ, SKA, RED, VIC, RVC, PSD, COA]
     B2: *pce
-gate_restrictions_not_allowed:
+gate_denied_dests:
   PCE:
     A1: *pce
     A2: *pce
