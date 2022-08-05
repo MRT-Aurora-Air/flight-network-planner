@@ -22,26 +22,14 @@ pub enum FlightType {
 pub struct Gate {
     pub airport: AirportCode,
     pub code: GateCode,
-    pub size: Size
+    pub size: Size,
 }
 pub trait FlightUtils {
-    fn score(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<i8>;
-    fn get_flight_type(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<FlightType>;
+    fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8>;
+    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType>;
 }
 impl FlightUtils for (&AirportCode, &AirportCode) {
-    fn score(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<i8> {
+    fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
         let mut s = 0i8;
         s -= flight_data.num_flights(&self.0, &self.1) as i8 - 1;
         Ok(s)
@@ -73,18 +61,10 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
     }
 }
 impl FlightUtils for (&Gate, &Gate) {
-    fn score(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<i8> {
+    fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
         (&self.0.airport, &self.1.airport).score(config, flight_data)
     }
-    fn get_flight_type(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<FlightType> {
+    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
         (&self.0.airport, &self.1.airport).get_flight_type(config, flight_data)
     }
 }
@@ -96,22 +76,34 @@ pub struct Flight {
     pub airport2: (AirportCode, GateCode),
 }
 impl FlightUtils for Flight {
-    fn score(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<i8> {
-        (&config.gates()?.into_iter().find(|g| g.code == self.airport1.0).ok_or_else(|| anyhow!("Gate not found"))?,
-         &config.gates()?.into_iter().find(|g| g.code == self.airport2.0).ok_or_else(|| anyhow!("Gate not found"))?)
+    fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
+        (
+            &config
+                .gates()?
+                .into_iter()
+                .find(|g| g.code == self.airport1.0)
+                .ok_or_else(|| anyhow!("Gate not found"))?,
+            &config
+                .gates()?
+                .into_iter()
+                .find(|g| g.code == self.airport2.0)
+                .ok_or_else(|| anyhow!("Gate not found"))?,
+        )
             .score(config, flight_data)
     }
-    fn get_flight_type(
-        &self,
-        config: &mut Config,
-        flight_data: &FlightData,
-    ) -> Result<FlightType> {
-        (&config.gates()?.into_iter().find(|g| g.code == self.airport1.0).ok_or_else(|| anyhow!("Gate not found"))?,
-         &config.gates()?.into_iter().find(|g| g.code == self.airport2.0).ok_or_else(|| anyhow!("Gate not found"))?)
+    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
+        (
+            &config
+                .gates()?
+                .into_iter()
+                .find(|g| g.code == self.airport1.0)
+                .ok_or_else(|| anyhow!("Gate not found"))?,
+            &config
+                .gates()?
+                .into_iter()
+                .find(|g| g.code == self.airport2.0)
+                .ok_or_else(|| anyhow!("Gate not found"))?,
+        )
             .get_flight_type(config, flight_data)
     }
 }

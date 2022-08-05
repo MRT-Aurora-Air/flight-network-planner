@@ -3,10 +3,10 @@ mod flight_data;
 mod run;
 mod types;
 
-use crate::flight_data::FlightData;
-use clap::Parser;
 use crate::config::Config;
+use crate::flight_data::FlightData;
 use anyhow::Result;
+use clap::Parser;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]

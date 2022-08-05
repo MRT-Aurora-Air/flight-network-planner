@@ -67,7 +67,7 @@ impl Config {
                         Gate {
                             airport: params.get(0)?.trim().to_string(),
                             code: params.get(1)?.trim().to_string(),
-                            size: params.get(2)?.trim().to_string()
+                            size: params.get(2)?.trim().to_string(),
                         }
                     })
                 })
