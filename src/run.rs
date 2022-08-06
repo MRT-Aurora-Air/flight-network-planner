@@ -90,11 +90,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
 
     let sort_gates = |x: Vec<(Gate, Gate, i8, FlightType)>| {
         x.into_iter()
-            .sorted_by(
-                |(_, _, s1, _), (_, _, s2, _)| {
-                    s1.cmp(s2)
-                },
-            )
+            .sorted_by(|(_, _, s1, _), (_, _, s2, _)| s1.cmp(s2))
             .collect::<Vec<_>>()
     };
     possible_flights = sort_gates(possible_flights);
@@ -108,23 +104,39 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
     while let Some((g1, g2, s, ty)) = possible_flights.pop() {
         let max1 = match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => config.max_h2h,
-            FlightType::ExistingH2N | FlightType::NonExistingH2N => if hubs.contains(&g1.airport) {config.max_h2n_hub} else {config.max_h2n_nonhub},
+            FlightType::ExistingH2N | FlightType::NonExistingH2N => {
+                if hubs.contains(&g1.airport) {
+                    config.max_h2n_hub
+                } else {
+                    config.max_h2n_nonhub
+                }
+            }
             FlightType::ExistingN2N | FlightType::NonExistingN2N => config.max_n2n,
         };
         let max2 = match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => config.max_h2h,
-            FlightType::ExistingH2N | FlightType::NonExistingH2N => if hubs.contains(&g2.airport) {config.max_h2n_hub} else {config.max_h2n_nonhub},
+            FlightType::ExistingH2N | FlightType::NonExistingH2N => {
+                if hubs.contains(&g2.airport) {
+                    config.max_h2n_hub
+                } else {
+                    config.max_h2n_nonhub
+                }
+            }
             FlightType::ExistingN2N | FlightType::NonExistingN2N => config.max_n2n,
         };
 
         if flights.iter().any(|&(ref f, _, _)| {
             (f.airport1.0 == g1.airport && f.airport2.0 == g2.airport)
                 || (f.airport1.0 == g2.airport && f.airport2.0 == g1.airport)
-        })
-        {
+        }) {
             trace!(
                 "Rejected ({} {}): {} {} <-> {} {} (already exists)",
-                ty, g1.size, g1.airport, g1.code, g2.airport, g2.code
+                ty,
+                g1.size,
+                g1.airport,
+                g1.code,
+                g2.airport,
+                g2.code
             );
             continue;
         }
@@ -134,12 +146,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
         } else {
             config.hard_max_nonhub
         }) as usize;
-        if destinations
-            .get(&g1)
-            .unwrap_or(&vec![])
-            .len()
-            >= g1_hardmax
-        {
+        if destinations.get(&g1).unwrap_or(&vec![]).len() >= g1_hardmax {
             debug!(
                 "Rejected ({} {}): {} {} <-> {} {} ({2} hit max limit of {})",
                 ty, g2.size, g1.airport, g1.code, g2.airport, g2.code, g1_hardmax
@@ -151,12 +158,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
         } else {
             config.hard_max_nonhub
         }) as usize;
-        if destinations
-            .get(&g2)
-            .unwrap_or(&vec![])
-            .len()
-            >= g2_hardmax
-        {
+        if destinations.get(&g2).unwrap_or(&vec![]).len() >= g2_hardmax {
             debug!(
                 "Rejected ({} {}): {} {} <-> {} {} ({2} hit max limit of {})",
                 ty, g1.size, g2.airport, g2.code, g1.airport, g1.code, g2_hardmax
@@ -169,7 +171,8 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             .iter()
             .filter(|d| (&g1.airport, *d).get_flight_type(config, fd).unwrap() == ty)
             .count()
-            >= max1 as usize {
+            >= max1 as usize
+        {
             debug!(
                 "Rejected ({} {}): {} {} <-> {} {} ({2} hit max type limit of {})",
                 ty, g2.size, g1.airport, g1.code, g2.airport, g2.code, max1
@@ -182,7 +185,8 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             .iter()
             .filter(|d| (&g2.airport, *d).get_flight_type(config, fd).unwrap() == ty)
             .count()
-            >= max2 as usize {
+            >= max2 as usize
+        {
             debug!(
                 "Rejected ({} {}): {} {} <-> {} {} ({2} hit max type limit of {})",
                 ty, g1.size, g2.airport, g2.code, g1.airport, g1.code, max2
@@ -244,7 +248,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             },
             airport1: (g1.airport.to_owned(), g1.code.to_owned()),
             airport2: (g2.airport.to_owned(), g2.code.to_owned()),
-            size: g1.size.to_owned()
+            size: g1.size.to_owned(),
         };
         info!(
             "{} ({} {}): {} {} -> {} {}, {}",
@@ -264,7 +268,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             },
             airport1: (g2.airport.to_owned(), g2.code.to_owned()),
             airport2: (g1.airport.to_owned(), g1.code.to_owned()),
-            size: g2.size.to_owned()
+            size: g2.size.to_owned(),
         };
         info!(
             "{} ({} {}): {} {} -> {} {}, {}",

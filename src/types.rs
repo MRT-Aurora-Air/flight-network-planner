@@ -134,14 +134,19 @@ pub struct Flight {
     pub flight_number: FlightNumber,
     pub airport1: (AirportCode, GateCode),
     pub airport2: (AirportCode, GateCode),
-    pub size: Size
+    pub size: Size,
 }
 impl Display for Flight {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "{} ({}): {} {} {} {}",
-            self.flight_number, self.size, self.airport1.0, self.airport1.1, self.airport2.0, self.airport2.1
+            self.flight_number,
+            self.size,
+            self.airport1.0,
+            self.airport1.1,
+            self.airport2.0,
+            self.airport2.1
         )
     }
 }

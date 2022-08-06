@@ -1,6 +1,7 @@
 mod config;
 mod flight_data;
 mod run;
+mod stats;
 mod types;
 
 use crate::config::Config;
@@ -8,14 +9,13 @@ use crate::flight_data::FlightData;
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
+use log::info;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
 struct Args {
     #[clap(subcommand)]
     subcmd: Subcmd,
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: u8,
 }
 #[derive(Parser)]
 enum Subcmd {
@@ -28,8 +28,10 @@ enum Subcmd {
 #[derive(Parser)]
 struct Run {
     file: String,
-    #[clap(short, long, value_parser, default_value = "plan.txt")]
+    #[clap(short, long, value_parser, default_value = "out.txt")]
     output: String,
+    #[clap(short, long, action)]
+    stats: bool,
 }
 
 fn main() -> Result<()> {
@@ -41,8 +43,9 @@ fn main() -> Result<()> {
             let mut fd = FlightData::from_sheets()?;
             fd.preprocess(&mut config)?;
             let result = run::run(&mut config, &fd)?;
+            if run.stats { println!("{}", stats::get_stats(&result, &mut config)?) }
             std::fs::write(
-                "out.txt",
+                run.output,
                 result
                     .into_iter()
                     .sorted_by_key(|(f, _, _)| f.flight_number)
