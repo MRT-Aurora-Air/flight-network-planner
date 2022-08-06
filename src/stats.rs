@@ -1,12 +1,10 @@
-use crate::types::{Flight, FlightType};
+use crate::flight::Flight;
+use crate::flight_type::FlightType;
 use crate::Config;
 use anyhow::Result;
 use itertools::Itertools;
 
-pub fn get_stats(
-    res: &Vec<(Flight, i8, FlightType)>,
-    config: &mut Config
-) -> Result<String> {
+pub fn get_stats(res: &Vec<(Flight, i8, FlightType)>, config: &mut Config) -> Result<String> {
     let flights = res.len();
     let flight_pairs = res.len() / 2;
     let airports = config.airports()?.len();
@@ -15,33 +13,35 @@ pub fn get_stats(
     let hard_max_hub = config.hard_max_hub;
     let hard_max_nonhub = config.hard_max_nonhub;
 
-    let full_gates = config
-        .gates()?
-        .into_iter()
-        .filter(|g| {
-            res.iter()
-                .filter(|(f, _, _)| f.airport1.1 == g.code || f.airport2.1 == g.code)
-                .count()
-                / 2
-                >= if hubs.contains(&g.airport) {
-                    hard_max_hub
-                } else {
-                    hard_max_nonhub
-                } as usize
-        });
-    let empty_gates = config
-        .gates()?
-        .into_iter()
-        .filter(|g| {
-            res.iter()
-                .filter(|(f, _, _)| f.airport1.1 == g.code || f.airport2.1 == g.code)
-                .count() == 0
-        });
-    let duped_flights = res.iter()
+    let full_gates = config.gates()?.into_iter().filter(|g| {
+        res.iter()
+            .filter(|(f, _, _)| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .count()
+            >= if hubs.contains(&g.airport) {
+                hard_max_hub
+            } else {
+                hard_max_nonhub
+            } as usize
+    });
+    let empty_gates = config.gates()?.into_iter().filter(|g| {
+        res.iter()
+            .filter(|(f, _, _)| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .count()
+            == 0
+    });
+    let duped_flights = res
+        .iter()
         .filter(|(_, _, ty)| {
-            [FlightType::ExistingH2H, FlightType::ExistingH2N, FlightType::ExistingN2N].contains(ty)
-        }).count();
-    Ok(format!("==Flight Stats==\n\
+            [
+                FlightType::ExistingH2H,
+                FlightType::ExistingH2N,
+                FlightType::ExistingN2N,
+            ]
+            .contains(ty)
+        })
+        .count();
+    Ok(format!(
+        "==Flight Stats==\n\
         Flights: {} ({} pairs)\n\
         Destinations: {}\n\
         Flight:Destination ratio: {:.2}\n\
@@ -49,9 +49,22 @@ pub fn get_stats(
         Full gates: {}\n\
         Empty gates: {}\n\
         % duplicates: {:.2}\n\
-        ", flights, flight_pairs, airports, flight_pairs as f64 / airports as f64, gates,
-    full_gates.map(|f| f.to_string()).sorted().collect::<Vec<_>>().join(", "),
-    empty_gates.map(|f| f.to_string()).sorted().collect::<Vec<_>>().join(", "),
-    duped_flights as f64 / flights as f64 * 100.0)
-    )
+        ",
+        flights,
+        flight_pairs,
+        airports,
+        flight_pairs as f64 / airports as f64,
+        gates,
+        full_gates
+            .map(|f| f.to_string())
+            .sorted()
+            .collect::<Vec<_>>()
+            .join(", "),
+        empty_gates
+            .map(|f| f.to_string())
+            .sorted()
+            .collect::<Vec<_>>()
+            .join(", "),
+        duped_flights as f64 / flights as f64 * 100.0
+    ))
 }

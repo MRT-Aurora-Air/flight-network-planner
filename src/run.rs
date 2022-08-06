@@ -1,4 +1,8 @@
 use crate::config::Config;
+use crate::flight::Flight;
+use crate::flight_type::FlightType;
+use crate::fng::FlightNumberGenerator;
+use crate::gate::Gate;
 use crate::types::*;
 use crate::FlightData;
 use anyhow::Result;

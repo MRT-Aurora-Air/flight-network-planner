@@ -1,59 +1,14 @@
 use crate::config::Config;
+use crate::flight_type::FlightType;
+use crate::gate::Gate;
 use crate::FlightData;
-use anyhow::{anyhow, Result};
-use std::fmt::Display;
+use anyhow::Result;
 
 pub type AirlineName = String;
 pub type AirportCode = String;
 pub type GateCode = String;
 pub type FlightNumber = u16;
 pub type Size = String;
-
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
-pub enum FlightType {
-    NonExistingH2H,
-    ExistingH2H,
-    NonExistingH2N,
-    NonExistingN2N,
-    ExistingH2N,
-    ExistingN2N,
-}
-impl Display for FlightType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FlightType::NonExistingH2H => write!(f, "H2Hn"),
-            FlightType::ExistingH2H => write!(f, "H2He"),
-            FlightType::NonExistingH2N => write!(f, "H2Nn"),
-            FlightType::NonExistingN2N => write!(f, "N2Nn"),
-            FlightType::ExistingH2N => write!(f, "H2Ne"),
-            FlightType::ExistingN2N => write!(f, "N2Ne"),
-        }
-    }
-}
-impl FlightType {
-    pub fn score(&self) -> u8 {
-        match self {
-            FlightType::NonExistingH2H => 6,
-            FlightType::ExistingH2H => 5,
-            FlightType::NonExistingH2N => 3,
-            FlightType::NonExistingN2N => 2,
-            FlightType::ExistingH2N => 1,
-            FlightType::ExistingN2N => 0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Gate {
-    pub airport: AirportCode,
-    pub code: GateCode,
-    pub size: Size,
-}
-impl Display for Gate {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} ({})", self.airport, self.code, self.size)
-    }
-}
 
 pub trait FlightUtils {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8>;
@@ -126,69 +81,5 @@ impl FlightUtils for (&Gate, &Gate) {
     }
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
         (&self.0.airport, &self.1.airport).get_flight_type(config, flight_data)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Flight {
-    pub flight_number: FlightNumber,
-    pub airport1: (AirportCode, GateCode),
-    pub airport2: (AirportCode, GateCode),
-    pub size: Size,
-}
-impl Display for Flight {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} ({}): {} {} {} {}",
-            self.flight_number,
-            self.size,
-            self.airport1.0,
-            self.airport1.1,
-            self.airport2.0,
-            self.airport2.1
-        )
-    }
-}
-impl FlightUtils for Flight {
-    fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
-        (
-            &config
-                .gates()?
-                .into_iter()
-                .find(|g| g.code == self.airport1.0)
-                .ok_or_else(|| anyhow!("Gate not found"))?,
-            &config
-                .gates()?
-                .into_iter()
-                .find(|g| g.code == self.airport2.0)
-                .ok_or_else(|| anyhow!("Gate not found"))?,
-        )
-            .score(config, flight_data)
-    }
-    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
-        (
-            &config
-                .gates()?
-                .into_iter()
-                .find(|g| g.code == self.airport1.0)
-                .ok_or_else(|| anyhow!("Gate not found"))?,
-            &config
-                .gates()?
-                .into_iter()
-                .find(|g| g.code == self.airport2.0)
-                .ok_or_else(|| anyhow!("Gate not found"))?,
-        )
-            .get_flight_type(config, flight_data)
-    }
-}
-
-pub struct FlightNumberGenerator(Box<dyn Iterator<Item = FlightNumber>>);
-impl FlightNumberGenerator {
-    pub fn new(numbers: Vec<(FlightNumber, FlightNumber)>) -> Self {
-        Self(Box::new(numbers.into_iter().flat_map(|(a, b)| a..=b)))
-    }
-    pub fn next(&mut self) -> Option<FlightNumber> {
-        self.0.next()
     }
 }

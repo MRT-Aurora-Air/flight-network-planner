@@ -1,3 +1,4 @@
+use crate::gate::Gate;
 use crate::types::*;
 use anyhow::{anyhow, Result};
 use counter::Counter;
