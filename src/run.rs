@@ -290,7 +290,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             flight2.flight_number, ty, g2.size, g2.airport, g2.code, g1.airport, g1.code, s
         );
         flights.push((flight2, s, ty));
-        possible_flights = sort_gates(possible_flights);
+        //possible_flights = sort_gates(possible_flights);
     }
 
     Ok(flights)
