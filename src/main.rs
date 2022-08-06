@@ -45,8 +45,8 @@ fn main() -> Result<()> {
                 "out.txt",
                 result
                     .into_iter()
-                    .sorted_by_key(|(f, _)| f.flight_number)
-                    .map(|(f, s)| format!("{} ({})", f, s))
+                    .sorted_by_key(|(f, _, _)| f.flight_number)
+                    .map(|(f, s, ty)| format!("{} ({}, {})", f, s, ty))
                     .collect::<Vec<_>>()
                     .join("\n"),
             )?;

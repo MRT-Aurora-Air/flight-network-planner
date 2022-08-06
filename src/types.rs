@@ -9,17 +9,41 @@ pub type GateCode = String;
 pub type FlightNumber = u16;
 pub type Size = String;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub enum FlightType {
-    NonExistingH2N,
     NonExistingH2H,
+    ExistingH2H,
+    NonExistingH2N,
     NonExistingN2N,
     ExistingH2N,
-    ExistingH2H,
     ExistingN2N,
 }
+impl Display for FlightType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FlightType::NonExistingH2H => write!(f, "H2Hn"),
+            FlightType::ExistingH2H => write!(f, "H2He"),
+            FlightType::NonExistingH2N => write!(f, "H2Nn"),
+            FlightType::NonExistingN2N => write!(f, "N2Nn"),
+            FlightType::ExistingH2N => write!(f, "H2Ne"),
+            FlightType::ExistingN2N => write!(f, "N2Ne"),
+        }
+    }
+}
+impl FlightType {
+    pub fn score(&self) -> u8 {
+        match self {
+            FlightType::NonExistingH2H => 6,
+            FlightType::ExistingH2H => 5,
+            FlightType::NonExistingH2N => 3,
+            FlightType::NonExistingN2N => 2,
+            FlightType::ExistingH2N => 1,
+            FlightType::ExistingN2N => 0,
+        }
+    }
+}
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Gate {
     pub airport: AirportCode,
     pub code: GateCode,
@@ -44,11 +68,7 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
             s += 1;
         }
 
-        if [FlightType::ExistingH2H, FlightType::NonExistingH2H]
-            .contains(&self.get_flight_type(config, flight_data)?)
-        {
-            s += 5;
-        }
+        s += self.get_flight_type(config, flight_data)?.score() as i8;
 
         if config
             .preferred_between
@@ -98,7 +118,11 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
 }
 impl FlightUtils for (&Gate, &Gate) {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
-        (&self.0.airport, &self.1.airport).score(config, flight_data)
+        let mut s = (&self.0.airport, &self.1.airport).score(config, flight_data)?;
+        if &*self.0.size != "S" {
+            s += 2;
+        }
+        Ok(s)
     }
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
         (&self.0.airport, &self.1.airport).get_flight_type(config, flight_data)
@@ -110,13 +134,14 @@ pub struct Flight {
     pub flight_number: FlightNumber,
     pub airport1: (AirportCode, GateCode),
     pub airport2: (AirportCode, GateCode),
+    pub size: Size
 }
 impl Display for Flight {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}: {} {} {} {}",
-            self.flight_number, self.airport1.0, self.airport1.1, self.airport2.0, self.airport2.1
+            "{} ({}): {} {} {} {}",
+            self.flight_number, self.size, self.airport1.0, self.airport1.1, self.airport2.0, self.airport2.1
         )
     }
 }
