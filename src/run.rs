@@ -5,7 +5,7 @@ use crate::fng::FlightNumberGenerator;
 use crate::gate::Gate;
 use crate::types::*;
 use crate::FlightData;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use log::{debug, info, trace, warn};
 use std::collections::HashMap;
@@ -16,6 +16,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
     let restricted_to = config.restricted_to.to_owned();
     let gate_allowed_dests = config.gate_allowed_dests.to_owned();
     let gate_denied_dests = config.gate_denied_dests.to_owned();
+    let no_dupes = config.no_dupes.to_owned();
     let mut possible_flights = config
         .gates()?
         .into_iter()
@@ -90,6 +91,15 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             Ok((g1, g2, s, ty))
         })
         .filter_ok(|(_, _, score, _)| *score >= 0)
+        .filter_ok(|(g1, g2, _, ty)| {
+            [
+                FlightType::ExistingH2H,
+                FlightType::ExistingH2N,
+                FlightType::ExistingN2N,
+            ]
+            .contains(ty)
+                && (no_dupes.contains(&g1) || no_dupes.contains(&g2))
+        })
         .collect::<Result<Vec<_>>>()?;
 
     let sort_gates = |x: Vec<(Gate, Gate, i8, FlightType)>| {
@@ -244,11 +254,11 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             flight_number: if let Some(fn_) = fn1 {
                 fn_
             } else {
-                warn!(
+                return Err(anyhow!(
                     "Could not generate flight number for {} -> {}",
-                    g1.airport, g2.airport
-                );
-                0
+                    g1.airport,
+                    g2.airport
+                ));
             },
             airport1: (g1.airport.to_owned(), g1.code.to_owned()),
             airport2: (g2.airport.to_owned(), g2.code.to_owned()),
@@ -264,11 +274,11 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             flight_number: if let Some(fn_) = fn2 {
                 fn_
             } else {
-                warn!(
+                return Err(anyhow!(
                     "Could not generate flight number for {} -> {}",
-                    g2.airport, g1.airport
-                );
-                0
+                    g2.airport,
+                    g1.airport
+                ));
             },
             airport1: (g2.airport.to_owned(), g2.code.to_owned()),
             airport2: (g1.airport.to_owned(), g1.code.to_owned()),

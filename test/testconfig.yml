@@ -65,6 +65,7 @@ restricted_to:
 preferred_between: [[PCE, SVS]]
 preferred_to:
   XXX: []
+no_dupes: [TSA]
 
 # == Airport restrictions ==
 # gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.

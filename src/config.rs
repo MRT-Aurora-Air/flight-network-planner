@@ -27,6 +27,7 @@ pub struct Config {
     pub max_n2n: u8,
     pub restricted_between: Vec<Vec<AirportCode>>,
     pub restricted_to: HashMap<AirportCode, Vec<AirportCode>>,
+    pub no_dupes: Vec<AirportCode>,
     pub preferred_between: Vec<Vec<AirportCode>>,
     pub preferred_to: HashMap<AirportCode, Vec<AirportCode>>,
     pub gate_allowed_dests: HashMap<AirportCode, HashMap<GateCode, Vec<AirportCode>>>,
