@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::FlightData;
 use anyhow::{anyhow, Result};
+use std::fmt::Display;
 
 pub type AirlineName = String;
 pub type AirportCode = String;
@@ -8,7 +9,7 @@ pub type GateCode = String;
 pub type FlightNumber = u16;
 pub type Size = String;
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone)]
 pub enum FlightType {
     NonExistingH2N,
     NonExistingH2H,
@@ -24,6 +25,12 @@ pub struct Gate {
     pub code: GateCode,
     pub size: Size,
 }
+impl Display for Gate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} ({})", self.airport, self.code, self.size)
+    }
+}
+
 pub trait FlightUtils {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8>;
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType>;
@@ -31,29 +38,58 @@ pub trait FlightUtils {
 impl FlightUtils for (&AirportCode, &AirportCode) {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {
         let mut s = 0i8;
-        s -= flight_data.num_flights(&self.0, &self.1) as i8 - 1;
+
+        s -= flight_data.num_flights(self.0, self.1) as i8 - 1;
+        if s == 1 {
+            s += 1;
+        }
+
+        if [FlightType::ExistingH2H, FlightType::NonExistingH2H]
+            .contains(&self.get_flight_type(config, flight_data)?)
+        {
+            s += 5;
+        }
+
+        if config
+            .preferred_between
+            .iter()
+            .any(|fs| fs.contains(self.0) && fs.contains(self.1))
+        {
+            s += 10;
+        }
+        if let Some(dests) = config.preferred_to.get(self.0) {
+            if dests.contains(self.1) {
+                s += 10;
+            }
+        }
+        if let Some(dests) = config.preferred_to.get(self.1) {
+            if dests.contains(self.0) {
+                s += 10;
+            }
+        }
+
         Ok(s)
     }
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
-        Ok(if config.hubs()?.contains(&self.0) {
-            if config.hubs()?.contains(&self.1) {
-                if flight_data.num_flights(&self.0, &self.1) > 0 {
+        Ok(if config.hubs()?.contains(self.0) {
+            if config.hubs()?.contains(self.1) {
+                if flight_data.num_flights(self.0, self.1) > 0 {
                     FlightType::ExistingH2H
                 } else {
                     FlightType::NonExistingH2H
                 }
-            } else if flight_data.num_flights(&self.0, &self.1) > 0 {
+            } else if flight_data.num_flights(self.0, self.1) > 0 {
                 FlightType::ExistingH2N
             } else {
                 FlightType::NonExistingH2N
             }
-        } else if config.hubs()?.contains(&self.1) {
-            if flight_data.num_flights(&self.0, &self.1) > 0 {
+        } else if config.hubs()?.contains(self.1) {
+            if flight_data.num_flights(self.0, self.1) > 0 {
                 FlightType::ExistingH2N
             } else {
                 FlightType::NonExistingH2N
             }
-        } else if flight_data.num_flights(&self.0, &self.1) > 0 {
+        } else if flight_data.num_flights(self.0, self.1) > 0 {
             FlightType::ExistingN2N
         } else {
             FlightType::NonExistingN2N
@@ -74,6 +110,15 @@ pub struct Flight {
     pub flight_number: FlightNumber,
     pub airport1: (AirportCode, GateCode),
     pub airport2: (AirportCode, GateCode),
+}
+impl Display for Flight {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}: {} {} {} {}",
+            self.flight_number, self.airport1.0, self.airport1.1, self.airport2.0, self.airport2.1
+        )
+    }
 }
 impl FlightUtils for Flight {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> Result<i8> {

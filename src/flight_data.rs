@@ -107,11 +107,12 @@ impl FlightData {
             .for_each(|a| {
                 warn!("Airport `{}` doesn't exist", a);
             });
-        let mut airline_airports = config.gates()?.into_iter().map(|g| g.airport);
+
+        let airports = config.airports()?;
         config
             .hubs()?
             .into_iter()
-            .filter(|a| !airline_airports.contains(a))
+            .filter(|a| !airports.iter().contains(a))
             .for_each(|a| {
                 warn!("Airport `{}` has no gates but is stated as a hub", a);
             });

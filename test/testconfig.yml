@@ -50,7 +50,8 @@ gates: {}
 hard_max_hub: 4
 hard_max_nonhub: 3
 max_h2h: 2
-max_h2n: 4
+max_h2n_hub: 4
+max_h2n_nonhub: 2
 max_n2n: 1
 
 # == Flight restrictions ==

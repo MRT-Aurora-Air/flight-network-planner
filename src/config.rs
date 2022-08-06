@@ -21,7 +21,8 @@ pub struct Config {
     pub hard_max_hub: u8,
     pub hard_max_nonhub: u8,
     pub max_h2h: u8,
-    pub max_h2n: u8,
+    pub max_h2n_hub: u8,
+    pub max_h2n_nonhub: u8,
     pub max_n2n: u8,
     pub restricted_between: Vec<Vec<AirportCode>>,
     pub restricted_to: HashMap<AirportCode, Vec<AirportCode>>,
@@ -72,8 +73,8 @@ impl Config {
                     })
                 })
                 .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| anyhow!("Invalid gate file"));
-            self.gates = gates?;
+                .ok_or_else(|| anyhow!("Invalid gate file"))?;
+            self.gates = gates;
         }
         Ok(self.gates.to_owned())
     }
