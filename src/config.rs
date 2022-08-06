@@ -62,7 +62,7 @@ impl Config {
         if self.gates.is_empty() {
             let gates = std::fs::read_to_string(&self.gate_file)?
                 .split('\n')
-                .filter(|l| !l.is_empty())
+                .filter(|l| !l.trim().is_empty())
                 .map(|l| {
                     Some({
                         let params = l.split(' ').collect::<Vec<_>>();
