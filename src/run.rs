@@ -7,7 +7,7 @@ use crate::types::*;
 use crate::FlightData;
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
-use log::{debug, info, trace, warn};
+use log::{debug, info, trace};
 use std::collections::HashMap;
 
 pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, FlightType)>> {
@@ -92,13 +92,14 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
         })
         .filter_ok(|(_, _, score, _)| *score >= 0)
         .filter_ok(|(g1, g2, _, ty)| {
-            [
-                FlightType::ExistingH2H,
-                FlightType::ExistingH2N,
-                FlightType::ExistingN2N,
-            ]
-            .contains(ty)
-                && (no_dupes.contains(&g1) || no_dupes.contains(&g2))
+            if no_dupes.contains(&g1.airport) || no_dupes.contains(&g2.airport) {
+                ![
+                    FlightType::ExistingH2H,
+                    FlightType::ExistingH2N,
+                    FlightType::ExistingN2N,
+                ]
+                    .contains(ty)
+            } else { true }
         })
         .collect::<Result<Vec<_>>>()?;
 

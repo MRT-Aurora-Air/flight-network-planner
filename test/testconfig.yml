@@ -25,7 +25,7 @@ hub_threshold: 5
 #   XXX: [...]: XXX is the hub's airport code
 # both_dir_same_num: Whether flights use the same number for both directions
 range_h2h: [[1, 100]]
-range_n2n: [[1001, 1100]]
+range_n2n: [[1001, 1500]]
 range_h2n:
   PCE: [[101, 300]]
   LAR: [[301, 500]]

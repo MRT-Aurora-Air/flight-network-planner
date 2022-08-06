@@ -24,14 +24,14 @@ impl Display for FlightType {
 }
 
 impl FlightType {
-    pub fn score(&self) -> u8 {
+    pub fn score(&self) -> i8 {
         match self {
             FlightType::NonExistingH2H => 6,
             FlightType::ExistingH2H => 5,
             FlightType::NonExistingH2N => 3,
             FlightType::NonExistingN2N => 2,
             FlightType::ExistingH2N => 1,
-            FlightType::ExistingN2N => 0,
+            FlightType::ExistingN2N => -1,
         }
     }
 }

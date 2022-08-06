@@ -23,7 +23,7 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
             s += 1;
         }
 
-        s += self.get_flight_type(config, flight_data)?.score() as i8;
+        s += self.get_flight_type(config, flight_data)?.score();
 
         if config
             .preferred_between
