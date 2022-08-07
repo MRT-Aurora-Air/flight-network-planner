@@ -44,7 +44,7 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
         }
 
         if flight_data.old_world_airports.contains(self.0) != flight_data.old_world_airports.contains(self.1) {
-            s += 2;
+            s += 3;
         }
 
         Ok(s)
