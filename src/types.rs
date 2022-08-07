@@ -43,6 +43,10 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
             }
         }
 
+        if flight_data.old_world_airports.contains(self.0) != flight_data.old_world_airports.contains(self.1) {
+            s += 2;
+        }
+
         Ok(s)
     }
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {
@@ -77,6 +81,10 @@ impl FlightUtils for (&Gate, &Gate) {
         if &*self.0.size != "S" {
             s += 2;
         }
+        if &*self.0.size == "XS" {
+            s += 1;
+        }
+
         Ok(s)
     }
     fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> Result<FlightType> {

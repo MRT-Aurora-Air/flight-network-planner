@@ -14,7 +14,7 @@ ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air"]
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: [PCE, LAR, VDA] # AUR
+hubs: [CIA, PCE, MWT, LAR] # AUR
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -27,9 +27,10 @@ hub_threshold: 5
 range_h2h: [[1, 100]]
 range_n2n: [[1001, 1500]]
 range_h2n:
-  PCE: [[101, 300]]
-  LAR: [[301, 500]]
-  VDA: [[501, 700]]
+  CIA: [[101, 300]]
+  PCE: [[301, 500]]
+  MWT: [[501, 700]]
+  LAR: [[701, 900]]
 both_dir_same_num: true
 
 # == Gates ==
@@ -52,14 +53,14 @@ hard_max_nonhub: 3
 max_h2h: 1
 max_h2n_hub: 4
 max_h2n_nonhub: 3
-max_n2n: 1
+max_n2n: 2
 
 # == Flight restrictions ==
 # restricted_between: A list of set of airports that cannot be flown between one another.
 # restricted_to: A mapping of airports to a list of destinations that are not able to be flown to.
 # preferred_between: A list of set of airports that are preferred to be flown between one another.
 # preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
-restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE]]
+restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI]]
 restricted_to:
   MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
 preferred_between: [[PCE, SVS]]

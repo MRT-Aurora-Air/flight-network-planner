@@ -10,7 +10,7 @@ mod types;
 
 use crate::config::Config;
 use crate::flight_data::FlightData;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
 

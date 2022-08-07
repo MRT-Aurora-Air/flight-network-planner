@@ -19,7 +19,8 @@ pub struct FlightDataFlight {
 #[derive(Debug)]
 pub struct FlightData {
     pub flights: Vec<FlightDataFlight>,
-    pub airport_codes: Vec<AirportCode>,
+    pub old_world_airports: Vec<AirportCode>,
+    pub new_world_airports: Vec<AirportCode>,
     pub timestamp: u64,
 }
 impl FlightData {
@@ -41,6 +42,7 @@ impl FlightData {
             })
             .collect::<Result<Vec<_>>>()?;
         let airport_codes: &[AirportCode] = raw[1][2..raw[1].len() - 5].as_ref();
+        let locations: &[String] = raw[2][2..raw[2].len()].as_ref();
         let flights = raw[4..]
             .iter()
             .map(|r| {
@@ -82,10 +84,31 @@ impl FlightData {
 
         Ok(FlightData {
             flights,
-            airport_codes: airport_codes
+            old_world_airports: airport_codes
                 .iter()
                 .cloned()
-                .filter(|s| !s.is_empty())
+                .zip(locations.iter().cloned())
+                .filter(|(s, l)| !s.is_empty() && !l.is_empty())
+                .filter_map(|(s, l)| {
+                    if l.trim() == "Old" {
+                        Some(s)
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+            new_world_airports: airport_codes
+                .iter()
+                .cloned()
+                .zip(locations.iter().cloned())
+                .filter(|(s, l)| !s.is_empty() && !l.is_empty())
+                .filter_map(|(s, l)| {
+                    if l.trim() == "New" {
+                        Some(s)
+                    } else {
+                        None
+                    }
+                })
                 .collect(),
             timestamp: SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
         })
@@ -103,7 +126,7 @@ impl FlightData {
             .map(|g| g.airport.to_owned())
             .sorted()
             .dedup()
-            .filter(|a| !self.airport_codes.contains(a))
+            .filter(|a| !self.new_world_airports.contains(a) && !self.old_world_airports.contains(a))
             .for_each(|a| {
                 warn!("Airport `{}` doesn't exist", a);
             });

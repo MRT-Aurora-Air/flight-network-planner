@@ -10,6 +10,17 @@ use itertools::Itertools;
 use log::{debug, info, trace};
 use std::collections::HashMap;
 
+fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &FlightData) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
+    Ok(x.into_iter()
+        .map(|(g1, g2, _, ty)| {
+            let s = (&g1, &g2).score(config, fd)?;
+            Ok((g1, g2, s, ty))
+        })
+        .collect::<Result<Vec<_>>>()?.into_iter()
+        .sorted_by(|(_, _, s1, _), (_, _, s2, _)| s1.cmp(s2))
+        .collect::<Vec<_>>())
+}
+
 pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, FlightType)>> {
     let hubs = config.hubs()?;
     let restricted_between = config.restricted_between.to_owned();
@@ -86,11 +97,9 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             }
         })
         .map(|(g1, g2)| {
-            let s = (&g1, &g2).score(config, fd)?;
             let ty = (&g1, &g2).get_flight_type(config, fd)?;
-            Ok((g1, g2, s, ty))
+            Ok((g1, g2, 0i8, ty))
         })
-        .filter_ok(|(_, _, score, _)| *score >= 0)
         .filter_ok(|(g1, g2, _, ty)| {
             if no_dupes.contains(&g1.airport) || no_dupes.contains(&g2.airport) {
                 ![
@@ -103,20 +112,20 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let sort_gates = |x: Vec<(Gate, Gate, i8, FlightType)>| {
-        x.into_iter()
-            .sorted_by(|(_, _, s1, _), (_, _, s2, _)| s1.cmp(s2))
-            .collect::<Vec<_>>()
-    };
-    possible_flights = sort_gates(possible_flights);
-
     let mut h2h_fng = FlightNumberGenerator::new(config.range_h2h.to_owned());
     let mut h2n_fng = HashMap::new();
     let mut n2n_fng = FlightNumberGenerator::new(config.range_n2n.to_owned());
 
-    let mut destinations = HashMap::new();
+    let mut destinations: HashMap<Gate, Vec<AirportCode>> = HashMap::new();
     let mut flights: Vec<(Flight, i8, FlightType)> = vec![];
-    while let Some((g1, g2, s, ty)) = possible_flights.pop() {
+
+    possible_flights = sort_gates(possible_flights, config, fd)?;
+
+    while let Some((g1, g2, mut s, ty)) = possible_flights.pop() {
+        s -= (destinations.get(&g1).unwrap_or(&vec![]).len() as i8).min(destinations.get(&g2).unwrap_or(&vec![]).len() as i8);
+        if s < 0 {
+            continue;
+        }
         let max1 = match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => config.max_h2h,
             FlightType::ExistingH2N | FlightType::NonExistingH2N => {
@@ -290,7 +299,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
             flight2.flight_number, ty, g2.size, g2.airport, g2.code, g1.airport, g1.code, s
         );
         flights.push((flight2, s, ty));
-        //possible_flights = sort_gates(possible_flights);
+        //possible_flights = sort_gates(possible_flights, config, fd)?;
     }
 
     Ok(flights)
