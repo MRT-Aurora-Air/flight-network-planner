@@ -122,6 +122,10 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
     possible_flights = sort_gates(possible_flights, config, fd)?;
 
     while let Some((g1, g2, mut s, ty)) = possible_flights.pop() {
+        if destinations.get(&g1).unwrap_or(&vec![]).len() >= *config.max_dests_per_gate.get(&g1.airport).unwrap_or(&u8::MAX) as usize
+        || destinations.get(&g2).unwrap_or(&vec![]).len() >= *config.max_dests_per_gate.get(&g2.airport).unwrap_or(&u8::MAX) as usize {
+            continue;
+        }
         s -= (destinations.get(&g1).unwrap_or(&vec![]).len() as i8).min(destinations.get(&g2).unwrap_or(&vec![]).len() as i8);
         if s < 0 {
             continue;

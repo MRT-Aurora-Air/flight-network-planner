@@ -17,3 +17,4 @@ cached = "~0.38.0"
 anyhow = { version = "~1.0.58", features = ["backtrace"] }
 counter = "~0.5.6"
 itertools = "~0.10.3"
+regex = "~1.6.0"

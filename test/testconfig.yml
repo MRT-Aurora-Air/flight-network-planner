@@ -65,6 +65,8 @@ max_n2n: 2
 restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI]]
 restricted_to:
   MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
+  PIA: [MWT]
+  PCA: [MWT]
 preferred_between: [[PCE, SVS]]
 preferred_to:
   XXX: []
@@ -88,3 +90,5 @@ gate_denied_dests:
     A7: *pce
     A8: *pce
     A9: *pce
+max_dests_per_gate:
+  PIA: 2

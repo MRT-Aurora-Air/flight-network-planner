@@ -32,6 +32,7 @@ pub struct Config {
     pub preferred_to: HashMap<AirportCode, Vec<AirportCode>>,
     pub gate_allowed_dests: HashMap<AirportCode, HashMap<GateCode, Vec<AirportCode>>>,
     pub gate_denied_dests: HashMap<AirportCode, HashMap<GateCode, Vec<AirportCode>>>,
+    pub max_dests_per_gate: HashMap<AirportCode, u8>,
     #[serde(skip)]
     gates: Vec<Gate>,
 }
