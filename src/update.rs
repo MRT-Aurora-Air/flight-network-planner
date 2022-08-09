@@ -8,31 +8,7 @@ use crate::Config;
 use crate::fng::FlightNumberGenerator;
 
 pub fn update(old_file: PathBuf, generated_plan: Vec<(Flight, i8, FlightType)>, config: &mut Config) -> Result<Vec<(Flight, i8, FlightType)>> {
-    let regex = Regex::new(r"(\d+) \((.*)\): (...) (.+) (...) (.+) \((\d+), (.2..)\)")?;
-    let old_plan = std::fs::read_to_string(old_file)?.split('\n')
-        .filter(|l| !l.is_empty())
-        .map(|l| Some({
-            let re = regex.captures(l)?;
-            (
-                Flight {
-                    flight_number: re.get(1)?.as_str().parse::<u16>().unwrap(),
-                    airport1: (re.get(3)?.as_str().into(), re.get(4)?.as_str().into()),
-                    airport2: (re.get(5)?.as_str().into(), re.get(6)?.as_str().into()),
-                    size: re.get(2)?.as_str().into(),
-                },
-                re.get(7)?.as_str().parse::<i8>().unwrap(),
-                match re.get(8)?.as_str() {
-                    "H2Hn" => FlightType::NonExistingH2H,
-                    "H2Nn" => FlightType::NonExistingH2N,
-                    "N2Nn" => FlightType::NonExistingN2N,
-                    "H2He" => FlightType::ExistingH2H,
-                    "H2Ne" => FlightType::ExistingH2N,
-                    "N2Ne" => FlightType::ExistingN2N,
-                    _ => unreachable!(),
-                },
-            )
-        }))
-        .collect::<Option<Vec<_>>>().ok_or_else(|| anyhow!("Invalid out file"))?;
+    let old_plan = load_from_out(old_file)?;
     let mut new_plan: Vec<(Flight, i8, FlightType)> = vec![];
     let mut used_flight_numbers = vec![];
     let mut flight_number_mapping = HashMap::new();
@@ -106,4 +82,32 @@ pub fn update(old_file: PathBuf, generated_plan: Vec<(Flight, i8, FlightType)>, 
             ))
     }
     Ok(new_plan)
+}
+
+pub fn load_from_out(out: PathBuf) -> Result<Vec<(Flight, i8, FlightType)>> {
+    let regex = Regex::new(r"(\d+) \((.*)\): (...) (.+) (...) (.+) \((\d+), (.2..)\)")?;
+    std::fs::read_to_string(out)?.split('\n')
+        .filter(|l| !l.is_empty())
+        .map(|l| Some({
+            let re = regex.captures(l)?;
+            (
+                Flight {
+                    flight_number: re.get(1)?.as_str().parse::<u16>().unwrap(),
+                    airport1: (re.get(3)?.as_str().into(), re.get(4)?.as_str().into()),
+                    airport2: (re.get(5)?.as_str().into(), re.get(6)?.as_str().into()),
+                    size: re.get(2)?.as_str().into(),
+                },
+                re.get(7)?.as_str().parse::<i8>().unwrap(),
+                match re.get(8)?.as_str() {
+                    "H2Hn" => FlightType::NonExistingH2H,
+                    "H2Nn" => FlightType::NonExistingH2N,
+                    "N2Nn" => FlightType::NonExistingN2N,
+                    "H2He" => FlightType::ExistingH2H,
+                    "H2Ne" => FlightType::ExistingH2N,
+                    "N2Ne" => FlightType::ExistingN2N,
+                    _ => unreachable!(),
+                },
+            )
+        }))
+        .collect::<Option<Vec<_>>>().ok_or_else(|| anyhow!("Invalid out file"))
 }

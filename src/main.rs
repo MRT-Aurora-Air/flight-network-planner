@@ -49,12 +49,17 @@ fn main() -> Result<()> {
             let mut config: Config = serde_yaml::from_reader(std::fs::File::open(&run.file)?)?;
             let mut fd = FlightData::from_sheets()?;
             fd.preprocess(&mut config)?;
-            let mut result = run::run(&mut config, &fd)?;
+            let old_plan = if let Some(ref old) = run.old {
+                Some(update::load_from_out(old.to_owned())?)
+            } else {
+                None
+            };
+            let mut result = run::run(&mut config, &fd, &old_plan)?;
             if run.stats {
                 println!("{}", stats::get_stats(&result, &mut config)?)
             }
-            if let Some(old) = run.old {
-                result = update::update(old, result, &mut config)?;
+            if let Some(ref old) = run.old {
+                result = update::update(old.to_owned(), result, &mut config)?;
             }
             std::fs::write(
                 run.output,

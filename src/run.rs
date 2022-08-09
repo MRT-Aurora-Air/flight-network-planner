@@ -10,10 +10,16 @@ use itertools::Itertools;
 use log::{debug, info, trace};
 use std::collections::HashMap;
 
-fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &FlightData) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
+fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<(Flight, i8, FlightType)>>) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
     Ok(x.into_iter()
         .map(|(g1, g2, _, ty)| {
-            let s = (&g1, &g2).score(config, fd)?;
+            let mut s = (&g1, &g2).score(config, fd)?;
+            if let Some(old_plan) = old_plan {
+                if old_plan.iter().filter(|(f, _, _)| f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
+                    && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned())).count() > 0 {
+                    s += 1;
+                }
+            }
             Ok((g1, g2, s, ty))
         })
         .collect::<Result<Vec<_>>>()?.into_iter()
@@ -21,7 +27,7 @@ fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &Fl
         .collect::<Vec<_>>())
 }
 
-pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, FlightType)>> {
+pub fn run(config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<(Flight, i8, FlightType)>>) -> Result<Vec<(Flight, i8, FlightType)>> {
     let hubs = config.hubs()?;
     let restricted_between = config.restricted_between.to_owned();
     let restricted_to = config.restricted_to.to_owned();
@@ -119,7 +125,7 @@ pub fn run(config: &mut Config, fd: &FlightData) -> Result<Vec<(Flight, i8, Flig
     let mut destinations: HashMap<Gate, Vec<AirportCode>> = HashMap::new();
     let mut flights: Vec<(Flight, i8, FlightType)> = vec![];
 
-    possible_flights = sort_gates(possible_flights, config, fd)?;
+    possible_flights = sort_gates(possible_flights, config, fd, old_plan)?;
 
     while let Some((g1, g2, mut s, ty)) = possible_flights.pop() {
         if destinations.get(&g1).unwrap_or(&vec![]).len() >= *config.max_dests_per_gate.get(&g1.airport).unwrap_or(&u8::MAX) as usize
