@@ -4,7 +4,7 @@ use crate::Config;
 use anyhow::Result;
 use itertools::Itertools;
 
-pub fn get_stats(res: &Vec<(Flight, i8, FlightType)>, config: &mut Config) -> Result<String> {
+pub fn get_stats(res: &Vec<Flight>, config: &mut Config) -> Result<String> {
     let flights = res.len();
     let flight_pairs = res.len() / 2;
     let airports = config.airports()?.len();
@@ -15,7 +15,7 @@ pub fn get_stats(res: &Vec<(Flight, i8, FlightType)>, config: &mut Config) -> Re
 
     let full_gates = config.gates()?.into_iter().filter(|g| {
         res.iter()
-            .filter(|(f, _, _)| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .filter(|f| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
             .count()
             >= if hubs.contains(&g.airport) {
                 hard_max_hub
@@ -25,19 +25,19 @@ pub fn get_stats(res: &Vec<(Flight, i8, FlightType)>, config: &mut Config) -> Re
     });
     let empty_gates = config.gates()?.into_iter().filter(|g| {
         res.iter()
-            .filter(|(f, _, _)| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .filter(|f| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
             .count()
             == 0
     });
     let duped_flights = res
         .iter()
-        .filter(|(_, _, ty)| {
+        .filter(|f| {
             [
                 FlightType::ExistingH2H,
                 FlightType::ExistingH2N,
                 FlightType::ExistingN2N,
             ]
-            .contains(ty)
+            .contains(&f.flight_type)
         })
         .count();
     Ok(format!(

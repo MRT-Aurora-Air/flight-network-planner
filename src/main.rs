@@ -65,8 +65,8 @@ fn main() -> Result<()> {
                 run.output,
                 result
                     .into_iter()
-                    .sorted_by_key(|(f, _, _)| f.flight_number)
-                    .map(|(f, s, ty)| format!("{} ({}, {})", f, s, ty))
+                    .sorted_by_key(|f| f.flight_number)
+                    .map(|f| f.to_string())
                     .collect::<Vec<_>>()
                     .join("\n"),
             )?;
