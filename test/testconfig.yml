@@ -70,7 +70,7 @@ restricted_to:
   MBI: [MWT]
 preferred_between: [[PCE, SVS]]
 preferred_to:
-  XXX: []
+  MBI: [CIA, PCE, KTI]
 no_dupes: [TSA, WMA, CAP]
 
 # == Airport restrictions ==
