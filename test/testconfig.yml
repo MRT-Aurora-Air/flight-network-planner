@@ -80,6 +80,11 @@ gate_allowed_dests:
   PCE:
     B1: &pce [SVS, RSA, RSN, GSZ, RSZ, SKA, RED, VIC, RVC, PSD, COA]
     B2: *pce
+  TSA:
+    D2: &tsa [OCD, TSN, TCB, TSA, RAV, HND, HGW, GBE, STS]
+  TCB:
+    A2: *tsa
+
 gate_denied_dests:
   PCE:
     A1: *pce
