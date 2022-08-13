@@ -14,22 +14,20 @@ fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &Fl
     Ok(x.into_iter()
         .map(|(g1, g2, _, ty)| {
             let s = (&g1, &g2).score(config, fd)?;
-            Ok((g1, g2, s, ty))
+            let existed = if let Some(old_plan) = old_plan {
+                old_plan.iter().filter(|f| (f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
+                    && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned())) || (f.airport1 == (g2.airport.to_owned(), g2.code.to_owned())
+                    && f.airport2 == (g1.airport.to_owned(), g1.code.to_owned()))).count() > 0
+            } else {false};
+            Ok((g1, g2, s, ty, existed))
         })
         .collect::<Result<Vec<_>>>()?.into_iter()
-        .sorted_by(|(g11, g12, mut s1, _), (g21, g22, mut s2, _)| {
-            if let Some(old_plan) = old_plan {
-                if old_plan.iter().filter(|f| f.airport1 == (g11.airport.to_owned(), g11.code.to_owned())
-                    && f.airport2 == (g12.airport.to_owned(), g12.code.to_owned())).count() > 0 {
-                    s1 += 1;
-                }
-                if old_plan.iter().filter(|f| f.airport1 == (g21.airport.to_owned(), g21.code.to_owned())
-                    && f.airport2 == (g22.airport.to_owned(), g22.code.to_owned())).count() > 0 {
-                    s2 += 1;
-                }
-            }
+        .sorted_by(|(_, _, mut s1, _, existed1), (_, _, mut s2, _, existed2)| {
+            if *existed1 {s1 += 1;}
+            if *existed2 {s2 += 1;}
             s1.cmp(&s2)
         })
+        .map(|(g1, g2, s, ty, _)| (g1, g2, s, ty))
         .collect::<Vec<_>>())
 }
 
