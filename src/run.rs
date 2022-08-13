@@ -13,17 +13,23 @@ use std::collections::HashMap;
 fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
     Ok(x.into_iter()
         .map(|(g1, g2, _, ty)| {
-            let mut s = (&g1, &g2).score(config, fd)?;
-            if let Some(old_plan) = old_plan {
-                if old_plan.iter().filter(|f| f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
-                    && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned())).count() > 0 {
-                    s += 1;
-                }
-            }
+            let s = (&g1, &g2).score(config, fd)?;
             Ok((g1, g2, s, ty))
         })
         .collect::<Result<Vec<_>>>()?.into_iter()
-        .sorted_by(|(_, _, s1, _), (_, _, s2, _)| s1.cmp(s2))
+        .sorted_by(|(g11, g12, mut s1, _), (g21, g22, mut s2, _)| {
+            if let Some(old_plan) = old_plan {
+                if old_plan.iter().filter(|f| f.airport1 == (g11.airport.to_owned(), g11.code.to_owned())
+                    && f.airport2 == (g12.airport.to_owned(), g12.code.to_owned())).count() > 0 {
+                    s1 += 1;
+                }
+                if old_plan.iter().filter(|f| f.airport1 == (g21.airport.to_owned(), g21.code.to_owned())
+                    && f.airport2 == (g22.airport.to_owned(), g22.code.to_owned())).count() > 0 {
+                    s2 += 1;
+                }
+            }
+            s1.cmp(&s2)
+        })
         .collect::<Vec<_>>())
 }
 
