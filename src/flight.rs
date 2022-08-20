@@ -9,7 +9,7 @@ pub struct Flight {
     pub airport2: (AirportCode, GateCode),
     pub size: Size,
     pub score: i8,
-    pub flight_type: FlightType
+    pub flight_type: FlightType,
 }
 
 impl Display for Flight {

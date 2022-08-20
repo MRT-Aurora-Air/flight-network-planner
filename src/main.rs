@@ -9,12 +9,13 @@ mod stats;
 mod types;
 mod update;
 
-use std::path::PathBuf;
 use crate::config::Config;
 use crate::flight_data::FlightData;
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
@@ -28,17 +29,24 @@ enum Subcmd {
     Run(Run),
     /// Gets the configuration for the planner
     GetConfig,
+    /// Tool to format the output as a mapping of gates to destinations
+    GateKeys(GateKeys),
 }
 
 #[derive(Parser)]
 struct Run {
-    file: String,
+    file: PathBuf,
     #[clap(short, long, value_parser, default_value = "out.txt")]
-    output: String,
+    output: PathBuf,
     #[clap(short, long, action)]
     stats: bool,
     #[clap(short, long, value_parser)]
-    old: Option<PathBuf>
+    old: Option<PathBuf>,
+}
+#[derive(Parser)]
+struct GateKeys {
+    #[clap(default_value = "out.txt")]
+    out_file: PathBuf,
 }
 
 fn main() -> Result<()> {
@@ -73,6 +81,27 @@ fn main() -> Result<()> {
         }
         Subcmd::GetConfig => {
             println!("Hello, world!");
+        }
+        Subcmd::GateKeys(gate_keys) => {
+            let flights = update::load_from_out(gate_keys.out_file)?;
+            let mut map: HashMap<_, Vec<_>> = HashMap::new();
+            for flight in flights {
+                map.entry(flight.airport1)
+                    .or_default()
+                    .push((flight.airport2, flight.flight_number));
+            }
+            println!(
+                "{}",
+                map.iter()
+                    .map(|((ka, kg), vs)| format!(
+                        "{} {}: {}",
+                        ka,
+                        kg,
+                        vs.iter().map(|((va, vg), num)| format!("{} {} {}", num, va, vg)).join(", ")
+                    ))
+                    .sorted()
+                    .join("\n")
+            )
         }
     }
     Ok(())

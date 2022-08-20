@@ -10,28 +10,51 @@ use itertools::Itertools;
 use log::{debug, info, trace};
 use std::collections::HashMap;
 
-fn sort_gates(x: Vec<(Gate, Gate, i8, FlightType)>, config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
+fn sort_gates(
+    x: Vec<(Gate, Gate, i8, FlightType)>,
+    config: &mut Config,
+    fd: &FlightData,
+    old_plan: &Option<Vec<Flight>>,
+) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
     Ok(x.into_iter()
         .map(|(g1, g2, _, ty)| {
             let s = (&g1, &g2).score(config, fd)?;
             let existed = if let Some(old_plan) = old_plan {
-                old_plan.iter().filter(|f| (f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
-                    && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned())) || (f.airport1 == (g2.airport.to_owned(), g2.code.to_owned())
-                    && f.airport2 == (g1.airport.to_owned(), g1.code.to_owned()))).count() > 0
-            } else {false};
+                old_plan
+                    .iter()
+                    .filter(|f| {
+                        (f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
+                            && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned()))
+                            || (f.airport1 == (g2.airport.to_owned(), g2.code.to_owned())
+                                && f.airport2 == (g1.airport.to_owned(), g1.code.to_owned()))
+                    })
+                    .count()
+                    > 0
+            } else {
+                false
+            };
             Ok((g1, g2, s, ty, existed))
         })
-        .collect::<Result<Vec<_>>>()?.into_iter()
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
         .sorted_by(|(_, _, mut s1, _, existed1), (_, _, mut s2, _, existed2)| {
-            if *existed1 {s1 += 1;}
-            if *existed2 {s2 += 1;}
+            if *existed1 {
+                s1 += 1;
+            }
+            if *existed2 {
+                s2 += 1;
+            }
             s1.cmp(&s2)
         })
         .map(|(g1, g2, s, ty, _)| (g1, g2, s, ty))
         .collect::<Vec<_>>())
 }
 
-pub fn run(config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>) -> Result<Vec<Flight>> {
+pub fn run(
+    config: &mut Config,
+    fd: &FlightData,
+    old_plan: &Option<Vec<Flight>>,
+) -> Result<Vec<Flight>> {
     let hubs = config.hubs()?;
     let restricted_between = config.restricted_between.to_owned();
     let restricted_to = config.restricted_to.to_owned();
@@ -117,8 +140,10 @@ pub fn run(config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>)
                     FlightType::ExistingH2N,
                     FlightType::ExistingN2N,
                 ]
-                    .contains(ty)
-            } else { true }
+                .contains(ty)
+            } else {
+                true
+            }
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -131,12 +156,25 @@ pub fn run(config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>)
 
     possible_flights = sort_gates(possible_flights, config, fd, old_plan)?;
 
-    while let Some((g1, g2, mut s, ty)) = possible_flights.pop() {
-        if destinations.get(&g1).unwrap_or(&vec![]).len() >= *config.max_dests_per_gate.get(&g1.airport).unwrap_or(&u8::MAX) as usize
-        || destinations.get(&g2).unwrap_or(&vec![]).len() >= *config.max_dests_per_gate.get(&g2.airport).unwrap_or(&u8::MAX) as usize {
+    while let Some((mut g1, mut g2, mut s, ty)) = possible_flights.pop() {
+        if hubs.contains(&g2.airport) && !hubs.contains(&g1.airport) {
+            (g1, g2) = (g2.to_owned(), g1.to_owned());
+        }
+        if destinations.get(&g1).unwrap_or(&vec![]).len()
+            >= *config
+                .max_dests_per_gate
+                .get(&g1.airport)
+                .unwrap_or(&u8::MAX) as usize
+            || destinations.get(&g2).unwrap_or(&vec![]).len()
+                >= *config
+                    .max_dests_per_gate
+                    .get(&g2.airport)
+                    .unwrap_or(&u8::MAX) as usize
+        {
             continue;
         }
-        s -= (destinations.get(&g1).unwrap_or(&vec![]).len() as i8).min(destinations.get(&g2).unwrap_or(&vec![]).len() as i8);
+        s -= (destinations.get(&g1).unwrap_or(&vec![]).len() as i8)
+            .min(destinations.get(&g2).unwrap_or(&vec![]).len() as i8);
         if s < 0 {
             continue;
         }
@@ -288,7 +326,7 @@ pub fn run(config: &mut Config, fd: &FlightData, old_plan: &Option<Vec<Flight>>)
             airport2: (g2.airport.to_owned(), g2.code.to_owned()),
             size: g1.size.to_owned(),
             score: s,
-            flight_type: ty
+            flight_type: ty,
         };
         info!(
             "{} ({} {}): {} {} -> {} {}, {}",

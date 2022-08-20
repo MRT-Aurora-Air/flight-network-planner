@@ -89,26 +89,14 @@ impl FlightData {
                 .cloned()
                 .zip(locations.iter().cloned())
                 .filter(|(s, l)| !s.is_empty() && !l.is_empty())
-                .filter_map(|(s, l)| {
-                    if l.trim() == "Old" {
-                        Some(s)
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|(s, l)| if l.trim() == "Old" { Some(s) } else { None })
                 .collect(),
             new_world_airports: airport_codes
                 .iter()
                 .cloned()
                 .zip(locations.iter().cloned())
                 .filter(|(s, l)| !s.is_empty() && !l.is_empty())
-                .filter_map(|(s, l)| {
-                    if l.trim() == "New" {
-                        Some(s)
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|(s, l)| if l.trim() == "New" { Some(s) } else { None })
                 .collect(),
             timestamp: SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
         })
@@ -126,7 +114,9 @@ impl FlightData {
             .map(|g| g.airport.to_owned())
             .sorted()
             .dedup()
-            .filter(|a| !self.new_world_airports.contains(a) && !self.old_world_airports.contains(a))
+            .filter(|a| {
+                !self.new_world_airports.contains(a) && !self.old_world_airports.contains(a)
+            })
             .for_each(|a| {
                 warn!("Airport `{}` doesn't exist", a);
             });
