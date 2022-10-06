@@ -7,6 +7,7 @@ use std::{collections::HashMap, path::PathBuf};
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
+use log::warn;
 use types::config::Config;
 
 use crate::{
@@ -25,7 +26,7 @@ enum Subcmd {
     /// Run the planner
     Run(Run),
     /// Gets the configuration for the planner
-    GetConfig,
+    GetConfig(GetConfig),
     /// Tool to format the output as a mapping of gates to destinations
     GateKeys(GateKeys),
 }
@@ -33,17 +34,24 @@ enum Subcmd {
 #[derive(Parser)]
 struct Run {
     file: PathBuf,
-    #[clap(short, long, value_parser, default_value = "out.txt")]
-    output: PathBuf,
+    #[clap(short, long, value_parser)]
+    output: Option<PathBuf>,
     #[clap(short, long, action)]
     stats: bool,
-    #[clap(short, long, value_parser)]
+    #[clap(long, value_parser)]
     old: Option<PathBuf>,
+}
+#[derive(Parser)]
+struct GetConfig {
+    #[clap(short, long, value_parser, default_value = "mfnp_config.yml")]
+    output: PathBuf,
 }
 #[derive(Parser)]
 struct GateKeys {
     #[clap(default_value = "out.txt")]
     out_file: PathBuf,
+    #[clap(short, long, value_parser)]
+    output: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -61,23 +69,28 @@ fn main() -> Result<()> {
             };
             let mut result = run::run(&mut config, &fd, &old_plan)?;
             if run.stats {
-                println!("{}", stats::get_stats(&result, &mut config)?)
+                warn!("\n{}", stats::get_stats(&result, &mut config)?)
             }
             if let Some(ref old) = run.old {
                 result = update::update(old.to_owned(), result, &mut config)?;
             }
-            std::fs::write(
-                run.output,
-                result
-                    .into_iter()
-                    .sorted_by_key(|f| f.flight_number)
-                    .map(|f| f.to_string())
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            )?;
+            let res = result
+                .into_iter()
+                .sorted_by_key(|f| f.flight_number)
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .join("\n");
+            println!("{res}");
+            if let Some(ref output) = run.output {
+                std::fs::write(output, res)?;
+            }
         }
-        Subcmd::GetConfig => {
-            println!("Hello, world!");
+        Subcmd::GetConfig(get_config) => {
+            println!("Saving as {}", get_config.output.to_string_lossy());
+            std::fs::write(
+                get_config.output,
+                include_str!("../data/default_config.yml"),
+            )?;
         }
         Subcmd::GateKeys(gate_keys) => {
             let flights = update::load_from_out(gate_keys.out_file)?;
@@ -87,20 +100,24 @@ fn main() -> Result<()> {
                     .or_default()
                     .push((flight.airport2, flight.flight_number));
             }
-            println!(
-                "{}",
-                map.iter()
-                    .map(|((ka, kg), vs)| format!(
+            let res = map
+                .iter()
+                .map(|((ka, kg), vs)| {
+                    format!(
                         "{} {}: {}",
                         ka,
                         kg,
                         vs.iter()
                             .map(|((va, vg), num)| format!("{} {} {}", num, va, vg))
                             .join(", ")
-                    ))
-                    .sorted()
-                    .join("\n")
-            )
+                    )
+                })
+                .sorted()
+                .join("\n");
+            println!("{res}");
+            if let Some(ref output) = gate_keys.output {
+                std::fs::write(output, res)?;
+            }
         }
     }
     Ok(())

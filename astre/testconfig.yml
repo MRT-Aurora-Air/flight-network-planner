@@ -3,18 +3,18 @@
 # == General ==
 # airline_name: The name of the airline
 # airline_code: The two-letter code that is prefixed to all flight numbers
-airline_name: Foobar Air
-airline_code: FB
+airline_name: Astrella
+airline_code: ""
 
 # == Handling existing flights ==
 # Flight data is pulled from the MRT Transit sheet.
 # ignored_airlines: The airlines to be ignored on the sheet (default: the value in airline_name)
-ignored_airlines: []
+ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air", "Astrella"]
 
 # == Airports ==
-# hubs: A list of hubs for your airline, in order of decreasing importance. (default: all airports with at least the number of gates in hub_threshold)
+# hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: []
+hubs: [CIA, PCE, MWT, LAR, SEG, VDA] # AUR
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -25,11 +25,14 @@ hub_threshold: 5
 #   XXX: [...]: XXX is the hub's airport code
 # both_dir_same_num: Whether flights use the same number for both directions
 range_h2h: [[1, 100]]
-range_n2n: [[901, 1000]]
+range_n2n: [[1401, 1600]]
 range_h2n:
-  ABC: [[101, 200]]
-  PQR: [[201, 300]]
-  XYZ: [[301, 400]]
+  CIA: [[101, 300]]
+  PCE: [[301, 500]]
+  MWT: [[501, 700]]
+  LAR: [[701, 900]]
+  SEG: [[901, 1100]]
+  VDA: [[1101, 1300]]
 both_dir_same_num: true
 
 # == Gates ==
@@ -39,44 +42,61 @@ both_dir_same_num: true
 #   XXX: XXX is the hub's airport code
 #   - code: The code of the gate
 #     size: The size of the gate
-gate_json:
-gates:
-  XXX:
-    - code: A1
-      size: S
-    - code: A2
-      size: S
+gate_file: astre/gates.txt
+gates: {}
       
 # == Warp limits ==
 # hard_max_hub: The hard maximum number of warps in a plane for hub airports. No plane will go past this number of warps.
 # hard_max_hub: The hard maximum number of warps in a plane for non-hub airports. No plane will go past this number of warps.
 # max_h2n: The maximum number of h2n warps in a plane. Applies to non-hubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
-hard_max_hub: 6
-hard_max_nonhub: 6
-max_h2n: 6
-max_n2n: 6
+hard_max_hub: 4
+hard_max_nonhub: 3
+max_h2h: 1
+max_h2n_hub: 4
+max_h2n_nonhub: 3
+max_n2n: 2
 
 # == Flight restrictions ==
 # restricted_between: A list of set of airports that cannot be flown between one another.
 # restricted_to: A mapping of airports to a list of destinations that are not able to be flown to.
 # preferred_between: A list of set of airports that are preferred to be flown between one another.
 # preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
-restricted_between: [[XXX, XXX]]
+restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI], [TCB, TSA, TSN]]
 restricted_to:
-  XXX: []
-preferred_between: [[XXX, XXX]]
+  MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
+  PIA: [MWT]
+  PCA: [MWT]
+  MBI: [MWT]
+  MWK: [MWT]
+preferred_between: [[PCE, SVS]]
 preferred_to:
-  XXX: []
+  MBI: [CIA, PCE, KTI]
+  PCA: [PCE, DBI, PIA]
+no_dupes: [WMA, CAP, DHA]
 
 # == Airport restrictions ==
 # gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
 # gate_restrictions_not_allowed: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
-gate_restrictions_allowed:
-  XXX:
-    A1: []
-    A2: []
-gate_restrictions_not_allowed:
-  XXX:
-    A1: []
-    A2: []
+gate_allowed_dests:
+  PCE:
+    B1: &pce [SVS, RSA, RSN, GSZ, RSZ, SKA, RED, VIC, RVC, PSD, COA]
+    B2: *pce
+  TSA:
+    D2: &tsa [OCD, TSN, TCB, TSA, RAV, HND, HGW, GBE, STS]
+  TCB:
+    A2: *tsa
+
+gate_denied_dests:
+  PCE:
+    A1: *pce
+    A2: *pce
+    A3: *pce
+    A4: *pce
+    A5: *pce
+    A6: *pce
+    A7: *pce
+    A8: *pce
+    A9: *pce
+max_dests_per_gate:
+  PIA: 2
