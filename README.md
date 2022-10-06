@@ -9,6 +9,7 @@ Astrella uses this program to generate its flight network and has found that ove
 1. Download the planner as an executable (see the releases for downloads for windows, mac and ubuntu)
 2. Navigate in the command line to the same directory as where you downloaded the executable to (you may also want to save it as `flight-network-planner`)
 3. Run `flight-network-planner get-config` to get the default configuration file
+    * If `flight-network-planner` doesn't exist, try `flight-network-planner-(windows/macos/ubuntu)` or `./flight-network-planner` or `./flight-network-planner-(windows/macos/ubuntu)`
     * Append `-o <config_file_name>` to save the configuration as a specific name
 4. Edit the configuration file for your airline
 5. Run `flight-network-planner run <config_file_name>` to generate the flight plan for your airline
