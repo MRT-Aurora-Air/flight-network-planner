@@ -7,7 +7,7 @@ Astrella uses this program to generate its flight network and has found that ove
 
 ## Usage
 1. Download the planner...
-    * ... from the command line: (`<version>` is the version number (without `v`) and `<os>` is one of `windows`, `macos`, `ubuntu`)
+    * ... from the command line: (`<version>` is the version number (with `v`) and `<os>` is one of `windows`, `macos`, `ubuntu`)
       * Windows Powershell: `Invoke-WebRequest -Uri "https://github.com/MRT-Aurora-Air/flight-network-planner/releases/download/<version>/flight-network-planner-<os>" -OutFile "flight-network-planner.exe"`
       * Mac / Linux: `curl "https://github.com/MRT-Aurora-Air/flight-network-planner/releases/download/<version>/flight-network-planner-<os>" -o flight-network-planner` (needs curl)
     * ... from Cargo: `cargo install --git https://github.com/MRT-Aurora-Air/flight-network-planner` (omit `./` from this step onwards in this case)
