@@ -6,7 +6,7 @@ This planner prioritises unique flight routes ie tries its best not to duplicate
 Astrella uses this program to generate its flight network and has found that over 90% of flights are unique :eyes:
 
 ## Usage
-1. Download the planner as an executable (I may make a GitHub action soon for this)
+1. Download the planner as an executable (see the releases for downloads for windows, mac and ubuntu)
 2. Navigate in the command line to the same directory as where you downloaded the executable to (you may also want to save it as `flight-network-planner`)
 3. Run `flight-network-planner get-config` to get the default configuration file
     * Append `-o <config_file_name>` to save the configuration as a specific name
