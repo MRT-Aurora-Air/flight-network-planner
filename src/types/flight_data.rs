@@ -1,16 +1,30 @@
 use std::{
     collections::HashMap,
+    io::Read,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use log::{debug, info, warn};
-use serde_json::Value;
 
 use crate::types::{config::Config, *};
 
-const PLANE_DATA_URL: &str = "https://sheets.googleapis.com/v4/spreadsheets/1wzvmXHQZ7ee7roIvIrJhkP6oCegnB8-nefWpd8ckqps/values/Airline+Class+Distribution?majorDimension=COLUMNS&key=AIzaSyCCRZqIOAVfwBNUofWbrkz0q5z4FUaCUyE";
+const PLANE_DATA_URL: &str = "https://docs.google.com/spreadsheets/d/1wzvmXHQZ7ee7roIvIrJhkP6oCegnB8-nefWpd8ckqps/export?format=csv&gid=248317803";
+
+// https://stackoverflow.com/questions/64498617/how-to-transpose-a-vector-of-vectors-in-rust
+fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    let len = v[0].len();
+    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..len)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .map(|n| n.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect()
+}
 
 #[derive(Debug)]
 pub struct FlightDataFlight {
@@ -28,22 +42,22 @@ pub struct FlightData {
 }
 impl FlightData {
     pub fn from_sheets() -> Result<Self> {
-        let raw = reqwest::blocking::get(PLANE_DATA_URL)?.json::<Value>()?["values"]
-            .as_array()
-            .ok_or_else(|| anyhow!("Incorrect format"))?
-            .iter()
-            .map(|r| {
-                r.as_array()
-                    .ok_or_else(|| anyhow!("Incorrect format"))?
-                    .iter()
-                    .map(|r| {
-                        Ok(r.as_str()
-                            .ok_or_else(|| anyhow!("Incorrect format"))?
-                            .to_string())
-                    })
-                    .collect::<Result<Vec<_>>>()
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let mut str = "".into();
+        reqwest::blocking::get(PLANE_DATA_URL)?.read_to_string(&mut str)?;
+        let mut csv = csv::ReaderBuilder::default()
+            .has_headers(false)
+            .from_reader(str.as_bytes());
+        let raw = transpose(
+            csv.records()
+                .into_iter()
+                .map(|record| {
+                    Ok(record?
+                        .into_iter()
+                        .map(|a| a.to_string())
+                        .collect::<Vec<_>>())
+                })
+                .collect::<Result<Vec<_>>>()?,
+        );
         let airport_codes: &[AirportCode] = raw[1][2..raw[1].len() - 5].as_ref();
         let locations: &[String] = raw[2][2..raw[2].len()].as_ref();
         let flights = raw[4..]
