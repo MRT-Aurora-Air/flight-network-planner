@@ -5,10 +5,12 @@ use itertools::Itertools;
 use log::{debug, info, trace};
 
 use crate::{
+    fbp,
     types::{
         config::Config, flight::Flight, flight_type::FlightType, flight_utils::FlightUtils,
         fng::FlightNumberGenerator, gate::Gate, AirportCode,
     },
+    utils::{for_both, for_both_permutations, AnyAllBool},
     FlightData,
 };
 
@@ -75,62 +77,43 @@ pub fn run(
             })
         })
         .filter(|(g1, g2)| g1.airport != g2.airport && g1.size == g2.size)
-        .filter(|(g1, g2)| {
-            !restricted_to
-                .get(&*g1.airport)
-                .unwrap_or(&vec![])
-                .contains(&g2.airport)
-        })
-        .filter(|(g1, g2)| {
-            !restricted_to
-                .get(&*g2.airport)
-                .unwrap_or(&vec![])
-                .contains(&g1.airport)
-        })
-        .filter(|(g1, g2)| {
-            if let Some(gates) = gate_allowed_dests.get(&*g1.airport) {
-                if let Some(gate) = gates.get(&*g1.code) {
-                    gate.contains(&g2.airport)
+        .filter(fbp!(
+            filter | g1: &Gate,
+            g2: &Gate | {
+                !restricted_to
+                    .get(&*g1.airport)
+                    .unwrap_or(&vec![])
+                    .contains(&g2.airport)
+            }
+        ))
+        .filter(fbp!(
+            filter | g1: &Gate,
+            g2: &Gate | {
+                if let Some(gates) = gate_allowed_dests.get(&*g1.airport) {
+                    if let Some(gate) = gates.get(&*g1.code) {
+                        gate.contains(&g2.airport)
+                    } else {
+                        true
+                    }
                 } else {
                     true
                 }
-            } else {
-                true
             }
-        })
-        .filter(|(g1, g2)| {
-            if let Some(gates) = gate_allowed_dests.get(&*g2.airport) {
-                if let Some(gate) = gates.get(&*g2.code) {
-                    gate.contains(&g1.airport)
+        ))
+        .filter(fbp!(
+            filter | g1: &Gate,
+            g2: &Gate | {
+                if let Some(gates) = gate_denied_dests.get(&*g1.airport) {
+                    if let Some(gate) = gates.get(&*g1.code) {
+                        !gate.contains(&g2.airport)
+                    } else {
+                        true
+                    }
                 } else {
                     true
                 }
-            } else {
-                true
             }
-        })
-        .filter(|(g1, g2)| {
-            if let Some(gates) = gate_denied_dests.get(&*g1.airport) {
-                if let Some(gate) = gates.get(&*g1.code) {
-                    !gate.contains(&g2.airport)
-                } else {
-                    true
-                }
-            } else {
-                true
-            }
-        })
-        .filter(|(g1, g2)| {
-            if let Some(gates) = gate_denied_dests.get(&*g2.airport) {
-                if let Some(gate) = gates.get(&*g2.code) {
-                    !gate.contains(&g1.airport)
-                } else {
-                    true
-                }
-            } else {
-                true
-            }
-        })
+        ))
         .map(|(g1, g2)| {
             let ty = (&g1, &g2).get_flight_type(config, fd)?;
             Ok((g1, g2, 0i8, ty))
@@ -162,16 +145,14 @@ pub fn run(
         if hubs.contains(&g2.airport) && !hubs.contains(&g1.airport) {
             (g1, g2) = (g2.to_owned(), g1.to_owned());
         }
-        if destinations.get(&g1).unwrap_or(&vec![]).len()
-            >= *config
-                .max_dests_per_gate
-                .get(&g1.airport)
-                .unwrap_or(&u8::MAX) as usize
-            || destinations.get(&g2).unwrap_or(&vec![]).len()
+        if for_both(&g1, &g2, |g| {
+            destinations.get(g).unwrap_or(&vec![]).len()
                 >= *config
                     .max_dests_per_gate
-                    .get(&g2.airport)
+                    .get(&g.airport)
                     .unwrap_or(&u8::MAX) as usize
+        })
+        .any()
         {
             continue;
         }
@@ -180,28 +161,17 @@ pub fn run(
         if s < 0 {
             continue;
         }
-        let max1 = match ty {
+        let (max1, max2) = for_both(&g1, &g2, |g| match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => config.max_h2h,
             FlightType::ExistingH2N | FlightType::NonExistingH2N => {
-                if hubs.contains(&g1.airport) {
+                if hubs.contains(&g.airport) {
                     config.max_h2n_hub
                 } else {
                     config.max_h2n_nonhub
                 }
             }
             FlightType::ExistingN2N | FlightType::NonExistingN2N => config.max_n2n,
-        };
-        let max2 = match ty {
-            FlightType::ExistingH2H | FlightType::NonExistingH2H => config.max_h2h,
-            FlightType::ExistingH2N | FlightType::NonExistingH2N => {
-                if hubs.contains(&g2.airport) {
-                    config.max_h2n_hub
-                } else {
-                    config.max_h2n_nonhub
-                }
-            }
-            FlightType::ExistingN2N | FlightType::NonExistingN2N => config.max_n2n,
-        };
+        });
 
         if flights.iter().any(|f| {
             (f.airport1.0 == g1.airport && f.airport2.0 == g2.airport)
@@ -219,68 +189,61 @@ pub fn run(
             continue;
         }
 
-        let g1_hardmax = (if hubs.contains(&g1.airport) {
-            config.hard_max_hub
-        } else {
-            config.hard_max_nonhub
-        }) as usize;
-        if destinations.get(&g1).unwrap_or(&vec![]).len() >= g1_hardmax {
-            debug!(
-                "Rejected ({} {}): {} {} <-> {} {} ({2} hit max limit of {})",
-                ty, g2.size, g1.airport, g1.code, g2.airport, g2.code, g1_hardmax
-            );
-            continue;
-        }
-        let g2_hardmax = (if hubs.contains(&g2.airport) {
-            config.hard_max_hub
-        } else {
-            config.hard_max_nonhub
-        }) as usize;
-        if destinations.get(&g2).unwrap_or(&vec![]).len() >= g2_hardmax {
-            debug!(
-                "Rejected ({} {}): {} {} <-> {} {} ({2} hit max limit of {})",
-                ty, g1.size, g2.airport, g2.code, g1.airport, g1.code, g2_hardmax
-            );
-            continue;
-        }
-        if destinations
-            .get(&g1)
-            .unwrap_or(&vec![])
-            .iter()
-            .filter(|d| (&g1.airport, *d).get_flight_type(config, fd).unwrap() == ty)
-            .count()
-            >= max1 as usize
+        let (g1_hardmax, g2_hardmax) = for_both(&g1, &g2, |g| {
+            (if hubs.contains(&g.airport) {
+                config.hard_max_hub
+            } else {
+                config.hard_max_nonhub
+            }) as usize
+        });
+        if for_both_permutations(
+            &(&g1, &g1_hardmax),
+            &(&g2, &g2_hardmax),
+            |(g, hardmax), (og, _)| {
+                if destinations.get(g).unwrap_or(&vec![]).len() >= **hardmax {
+                    debug!(
+                        "Rejected ({} {}): {} {} <-> {} {} ({2} hit max limit of {})",
+                        ty, og.size, g.airport, g.code, og.airport, og.code, hardmax
+                    );
+                    true
+                } else {
+                    false
+                }
+            },
+        )
+        .any()
         {
-            debug!(
-                "Rejected ({} {}): {} {} <-> {} {} ({2} hit max type limit of {})",
-                ty, g2.size, g1.airport, g1.code, g2.airport, g2.code, max1
-            );
             continue;
         }
-        if destinations
-            .get(&g2)
-            .unwrap_or(&vec![])
-            .iter()
-            .filter(|d| (&g2.airport, *d).get_flight_type(config, fd).unwrap() == ty)
-            .count()
-            >= max2 as usize
+        if for_both_permutations(&(&g1, max1), &(&g2, max2), |(g, max), (og, _)| {
+            if destinations
+                .get(g)
+                .unwrap_or(&vec![])
+                .iter()
+                .filter(|d| (&g.airport, *d).get_flight_type(config, fd).unwrap() == ty)
+                .count()
+                >= *max as usize
+            {
+                debug!(
+                    "Rejected ({} {}): {} {} <-> {} {} ({2} hit max type limit of {})",
+                    ty, og.size, g.airport, g.code, og.airport, og.code, max
+                );
+                true
+            } else {
+                false
+            }
+        })
+        .any()
         {
-            debug!(
-                "Rejected ({} {}): {} {} <-> {} {} ({2} hit max type limit of {})",
-                ty, g1.size, g2.airport, g2.code, g1.airport, g1.code, max2
-            );
             continue;
         }
 
-        destinations
-            .entry(g1.to_owned())
-            .or_insert(vec![])
-            .push(g2.airport.to_owned());
-        destinations
-            .entry(g2.to_owned())
-            .or_insert(vec![])
-            .push(g1.airport.to_owned());
-
+        for_both_permutations(&g1, &g2, |g1, g2| {
+            destinations
+                .entry(g1.to_owned())
+                .or_insert(vec![])
+                .push(g2.airport.to_owned());
+        });
         let fng = match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => &mut h2h_fng,
             FlightType::ExistingH2N | FlightType::NonExistingH2N => h2n_fng
@@ -314,49 +277,33 @@ pub fn run(
             fng.next()
         };
 
-        let flight1 = Flight {
-            flight_number: if let Some(fn_) = fn1 {
-                fn_
-            } else {
-                return Err(anyhow!(
-                    "Could not generate flight number for {} -> {}",
-                    g1.airport,
-                    g2.airport
-                ));
-            },
-            airport1: (g1.airport.to_owned(), g1.code.to_owned()),
-            airport2: (g2.airport.to_owned(), g2.code.to_owned()),
-            size: g1.size.to_owned(),
-            score: s,
-            flight_type: ty,
-        };
-        info!(
-            "{} ({} {}): {} {} -> {} {}, {}",
-            flight1.flight_number, ty, g1.size, g1.airport, g1.code, g2.airport, g2.code, s
-        );
-        flights.push(flight1);
-
-        let flight2 = Flight {
-            flight_number: if let Some(fn_) = fn2 {
-                fn_
-            } else {
-                return Err(anyhow!(
-                    "Could not generate flight number for {} -> {}",
-                    g2.airport,
-                    g1.airport
-                ));
-            },
-            airport1: (g2.airport.to_owned(), g2.code.to_owned()),
-            airport2: (g1.airport.to_owned(), g1.code.to_owned()),
-            size: g2.size.to_owned(),
-            score: s,
-            flight_type: ty,
-        };
-        info!(
-            "{} ({} {}): {} {} -> {} {}, {}",
-            flight2.flight_number, ty, g2.size, g2.airport, g2.code, g1.airport, g1.code, s
-        );
-        flights.push(flight2);
+        let (flight1, flight2) =
+            for_both_permutations(&(&g1, fn1), &(&g2, fn2), |(g1, fn1), (g2, _)| {
+                let flight = Flight {
+                    flight_number: if let Some(fn_) = fn1 {
+                        fn_.to_owned()
+                    } else {
+                        return Err(anyhow!(
+                            "Could not generate flight number for {} -> {}",
+                            g1.airport,
+                            g2.airport
+                        ));
+                    },
+                    airport1: (g1.airport.to_owned(), g1.code.to_owned()),
+                    airport2: (g2.airport.to_owned(), g2.code.to_owned()),
+                    size: g1.size.to_owned(),
+                    score: s,
+                    flight_type: ty,
+                };
+                info!(
+                    "{} ({} {}): {} {} -> {} {}, {}",
+                    flight.flight_number, ty, g1.size, g1.airport, g1.code, g2.airport, g2.code, s
+                );
+                flights.push(flight.to_owned());
+                Ok(flight)
+            });
+        flight1?;
+        flight2?;
         //possible_flights = sort_gates(possible_flights, config, fd)?;
     }
 

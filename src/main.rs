@@ -1,5 +1,6 @@
 mod cmd;
 mod types;
+mod utils;
 
 use std::{collections::HashMap, path::PathBuf};
 
