@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::types::config::Config;
 use crate::types::*;
 use anyhow::{anyhow, Result};
 use itertools::Itertools;

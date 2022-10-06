@@ -1,21 +1,14 @@
-mod config;
-mod flight;
-mod flight_data;
-mod flight_type;
-mod fng;
-mod gate;
-mod run;
-mod stats;
 mod types;
-mod update;
+mod cmd;
 
-use crate::config::Config;
-use crate::flight_data::FlightData;
+use types::config::Config;
+use crate::types::flight_data::FlightData;
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use crate::cmd::{run, stats, update};
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]

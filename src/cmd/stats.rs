@@ -1,5 +1,5 @@
-use crate::flight::Flight;
-use crate::flight_type::FlightType;
+use crate::types::flight::Flight;
+use crate::types::flight_type::FlightType;
 use crate::Config;
 use anyhow::Result;
 use itertools::Itertools;

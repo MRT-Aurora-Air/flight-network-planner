@@ -1,6 +1,6 @@
-use crate::flight::Flight;
-use crate::flight_type::FlightType;
-use crate::fng::FlightNumberGenerator;
+use crate::types::flight::Flight;
+use crate::types::flight_type::FlightType;
+use crate::types::fng::FlightNumberGenerator;
 use crate::Config;
 use anyhow::{anyhow, Result};
 use regex::Regex;

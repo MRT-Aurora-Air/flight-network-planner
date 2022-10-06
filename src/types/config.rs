@@ -1,4 +1,3 @@
-use crate::gate::Gate;
 use crate::types::*;
 use anyhow::{anyhow, Result};
 use counter::Counter;
@@ -6,6 +5,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use crate::types::gate::Gate;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -69,7 +69,7 @@ impl Config {
                     Some({
                         let params = l.split(' ').collect::<Vec<_>>();
                         Gate {
-                            airport: params.get(0)?.trim().to_string(),
+                            airport: params.first()?.trim().to_string(),
                             code: params.get(1)?.trim().to_string(),
                             size: params.get(2)?.trim().to_string(),
                         }
