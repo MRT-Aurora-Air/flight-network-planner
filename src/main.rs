@@ -27,29 +27,36 @@ enum Subcmd {
     Run(Run),
     /// Gets the configuration for the planner
     GetConfig(GetConfig),
-    /// Tool to format the output as a mapping of gates to destinations
+    /// Tool to format the output of `run` as a mapping of gates to destinations
     GateKeys(GateKeys),
 }
 
 #[derive(Parser)]
 struct Run {
+    /// The configuration YML file to read from
     file: PathBuf,
+    /// The file to output the results to
     #[clap(short, long, value_parser)]
     output: Option<PathBuf>,
+    /// Whether to print statistics
     #[clap(short, long, action)]
     stats: bool,
+    /// The old output file (will be used to preserve original flight routes so it won't duplicate so much)
     #[clap(long, value_parser)]
     old: Option<PathBuf>,
 }
 #[derive(Parser)]
 struct GetConfig {
+    /// The name of the config file to save as
     #[clap(short, long, value_parser, default_value = "mfnp_config.yml")]
     output: PathBuf,
 }
 #[derive(Parser)]
 struct GateKeys {
+    /// The output file from `run`
     #[clap(default_value = "out.txt")]
     out_file: PathBuf,
+    /// The file to output the results to
     #[clap(short, long, value_parser)]
     output: Option<PathBuf>,
 }
