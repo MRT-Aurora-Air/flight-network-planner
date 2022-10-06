@@ -1,14 +1,17 @@
-mod types;
 mod cmd;
+mod types;
 
-use types::config::Config;
-use crate::types::flight_data::FlightData;
+use std::{collections::HashMap, path::PathBuf};
+
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use crate::cmd::{run, stats, update};
+use types::config::Config;
+
+use crate::{
+    cmd::{run, stats, update},
+    types::flight_data::FlightData,
+};
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
@@ -90,7 +93,9 @@ fn main() -> Result<()> {
                         "{} {}: {}",
                         ka,
                         kg,
-                        vs.iter().map(|((va, vg), num)| format!("{} {} {}", num, va, vg)).join(", ")
+                        vs.iter()
+                            .map(|((va, vg), num)| format!("{} {} {}", num, va, vg))
+                            .join(", ")
                     ))
                     .sorted()
                     .join("\n")

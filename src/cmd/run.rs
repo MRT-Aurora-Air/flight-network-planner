@@ -1,15 +1,16 @@
-use crate::types::config::Config;
-use crate::types::flight::Flight;
-use crate::types::flight_type::FlightType;
-use crate::types::fng::FlightNumberGenerator;
-use crate::types::gate::Gate;
-use crate::FlightData;
+use std::collections::HashMap;
+
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use log::{debug, info, trace};
-use std::collections::HashMap;
-use crate::types::AirportCode;
-use crate::types::flight_utils::FlightUtils;
+
+use crate::{
+    types::{
+        config::Config, flight::Flight, flight_type::FlightType, flight_utils::FlightUtils,
+        fng::FlightNumberGenerator, gate::Gate, AirportCode,
+    },
+    FlightData,
+};
 
 fn sort_gates(
     x: Vec<(Gate, Gate, i8, FlightType)>,

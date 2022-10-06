@@ -1,11 +1,14 @@
-use crate::types::config::Config;
-use crate::types::*;
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use serde_json::Value;
-use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::types::{config::Config, *};
 
 const PLANE_DATA_URL: &str = "https://sheets.googleapis.com/v4/spreadsheets/1wzvmXHQZ7ee7roIvIrJhkP6oCegnB8-nefWpd8ckqps/values/Airline+Class+Distribution?majorDimension=COLUMNS&key=AIzaSyCCRZqIOAVfwBNUofWbrkz0q5z4FUaCUyE";
 

@@ -1,8 +1,10 @@
-use crate::types::flight::Flight;
-use crate::types::flight_type::FlightType;
-use crate::Config;
 use anyhow::Result;
 use itertools::Itertools;
+
+use crate::{
+    types::{flight::Flight, flight_type::FlightType},
+    Config,
+};
 
 pub fn get_stats(res: &Vec<Flight>, config: &mut Config) -> Result<String> {
     let flights = res.len();

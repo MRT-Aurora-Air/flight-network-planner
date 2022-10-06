@@ -1,11 +1,11 @@
-use crate::types::*;
+use std::{collections::HashMap, path::PathBuf};
+
 use anyhow::{anyhow, Result};
 use counter::Counter;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
-use crate::types::gate::Gate;
+
+use crate::types::{gate::Gate, *};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {

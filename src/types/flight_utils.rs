@@ -1,11 +1,15 @@
-use crate::{Config, FlightData};
-use crate::types::gate::Gate;
-use crate::types::AirportCode;
-use crate::types::flight_type::FlightType;
+use crate::{
+    types::{flight_type::FlightType, gate::Gate, AirportCode},
+    Config, FlightData,
+};
 
 pub trait FlightUtils {
     fn score(&self, config: &mut Config, flight_data: &FlightData) -> anyhow::Result<i8>;
-    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> anyhow::Result<FlightType>;
+    fn get_flight_type(
+        &self,
+        config: &mut Config,
+        flight_data: &FlightData,
+    ) -> anyhow::Result<FlightType>;
 }
 
 impl FlightUtils for (&AirportCode, &AirportCode) {
@@ -45,7 +49,11 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
 
         Ok(s)
     }
-    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> anyhow::Result<FlightType> {
+    fn get_flight_type(
+        &self,
+        config: &mut Config,
+        flight_data: &FlightData,
+    ) -> anyhow::Result<FlightType> {
         Ok(if config.hubs()?.contains(self.0) {
             if config.hubs()?.contains(self.1) {
                 if flight_data.num_flights(self.0, self.1) > 0 {
@@ -84,7 +92,11 @@ impl FlightUtils for (&Gate, &Gate) {
 
         Ok(s)
     }
-    fn get_flight_type(&self, config: &mut Config, flight_data: &FlightData) -> anyhow::Result<FlightType> {
+    fn get_flight_type(
+        &self,
+        config: &mut Config,
+        flight_data: &FlightData,
+    ) -> anyhow::Result<FlightType> {
         (&self.0.airport, &self.1.airport).get_flight_type(config, flight_data)
     }
 }

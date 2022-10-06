@@ -1,11 +1,12 @@
-use crate::types::flight::Flight;
-use crate::types::flight_type::FlightType;
-use crate::types::fng::FlightNumberGenerator;
-use crate::Config;
+use std::{collections::HashMap, path::PathBuf};
+
 use anyhow::{anyhow, Result};
 use regex::Regex;
-use std::collections::HashMap;
-use std::path::PathBuf;
+
+use crate::{
+    types::{flight::Flight, flight_type::FlightType, fng::FlightNumberGenerator},
+    Config,
+};
 
 pub fn update(
     old_file: PathBuf,

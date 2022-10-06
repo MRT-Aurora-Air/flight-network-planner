@@ -1,5 +1,6 @@
-use crate::types::{AirportCode, GateCode, Size};
 use std::fmt::Display;
+
+use crate::types::{AirportCode, GateCode, Size};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Gate {
