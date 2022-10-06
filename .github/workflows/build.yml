@@ -1,26 +1,39 @@
 name: Rust
 
 on:
-  - push
-  - pull_request
-  - release
+  push:
+    tags:
+      - '*'
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    name: Build Exe
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: flight-network-planner
+            asset_name: flight-network-planner-ubuntu
+          - os: windows-latest
+            artifact_name: flight-network-planner.exe
+            asset_name: flight-network-planner-windows
+          - os: macos-latest
+            artifact_name: flight-network-planner
+            asset_name: flight-network-planner-macos
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
     - name: Build
       run: cargo build --release
-    - uses: actions/upload-artifact@v3
+    - name: Upload binaries
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: flight-network-planner
-        path: target/release/flight-network-planner*
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/${{ matrix.artifact_name }}
+        asset_name: ${{ matrix.asset_name }}
+        tag: ${{ github.ref }}
     
