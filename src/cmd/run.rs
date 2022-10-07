@@ -270,11 +270,11 @@ pub fn run(
             FlightType::ExistingN2N | FlightType::NonExistingN2N => &mut n2n_fng,
         };
 
-        let fn1 = fng.next();
+        let fn1 = fng.find(|a| !flights.iter().map(|f| f.flight_number).contains(a));
         let fn2 = if config.both_dir_same_num {
             fn1
         } else {
-            fng.next()
+            fng.find(|a| !flights.iter().map(|f| f.flight_number).contains(a))
         };
 
         let (flight1, flight2) =

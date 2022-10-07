@@ -6,7 +6,10 @@ impl FlightNumberGenerator {
     pub fn new(numbers: Vec<(FlightNumber, FlightNumber)>) -> Self {
         Self(Box::new(numbers.into_iter().flat_map(|(a, b)| a..=b)))
     }
-    pub fn next(&mut self) -> Option<FlightNumber> {
+}
+impl Iterator for FlightNumberGenerator {
+    type Item = FlightNumber;
+    fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
