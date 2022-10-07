@@ -6,6 +6,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{gate::Gate, *};
+use crate::types::gate::PartialGate;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -18,7 +19,8 @@ pub struct Config {
     pub range_n2n: Vec<(FlightNumber, FlightNumber)>,
     pub range_h2n: HashMap<AirportCode, Vec<(FlightNumber, FlightNumber)>>,
     pub both_dir_same_num: bool,
-    pub gate_file: PathBuf,
+    pub gate_file: Option<PathBuf>,
+    pub gates: HashMap<AirportCode, Vec<PartialGate>>,
     pub hard_max_hub: u8,
     pub hard_max_nonhub: u8,
     pub max_h2h: u8,
@@ -34,7 +36,7 @@ pub struct Config {
     pub gate_denied_dests: HashMap<AirportCode, HashMap<GateCode, Vec<AirportCode>>>,
     pub max_dests_per_gate: HashMap<AirportCode, u8>,
     #[serde(skip)]
-    gates: Vec<Gate>,
+    _gates: Vec<Gate>,
 }
 impl Config {
     pub fn airports(&mut self) -> Result<Vec<AirportCode>> {
@@ -61,25 +63,36 @@ impl Config {
         })
     }
     pub fn gates(&mut self) -> Result<Vec<Gate>> {
-        if self.gates.is_empty() {
-            let gates = std::fs::read_to_string(&self.gate_file)?
-                .split('\n')
-                .filter(|l| !l.trim().is_empty())
-                .map(|l| {
-                    Some({
-                        let params = l.split(' ').collect::<Vec<_>>();
-                        Gate {
-                            airport: params.first()?.trim().to_string(),
-                            code: params.get(1)?.trim().to_string(),
-                            size: params.get(2)?.trim().to_string(),
-                        }
+        if self._gates.is_empty() {
+            let gates = if let Some(gate_file) = &self.gate_file {
+                std::fs::read_to_string(gate_file)?
+                    .split('\n')
+                    .filter(|l| !l.trim().is_empty())
+                    .map(|l| {
+                        Some({
+                            let params = l.split(' ').collect::<Vec<_>>();
+                            Gate {
+                                airport: params.first()?.trim().to_string(),
+                                code: params.get(1)?.trim().to_string(),
+                                size: params.get(2)?.trim().to_string(),
+                            }
+                        })
                     })
-                })
-                .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| anyhow!("Invalid gate file"))?;
-            self.gates = gates;
+                    .collect::<Option<Vec<_>>>()
+                    .ok_or_else(|| anyhow!("Invalid gate file"))?
+            } else {
+                self.gates.iter()
+                    .flat_map(|(a, pgs)| pgs.iter()
+                    .map(|pg| Gate {
+                        airport: a.to_owned(),
+                        code: pg.code.to_owned(),
+                        size: pg.size.to_owned()
+                    })).collect()
+            };
+
+            self._gates = gates;
         }
-        Ok(self.gates.to_owned())
+        Ok(self._gates.to_owned())
     }
     pub fn ignored_airlines(&self) -> Vec<AirlineName> {
         if self.ignored_airlines.is_empty() {
