@@ -76,14 +76,14 @@ preferred_to:
 no_dupes: [XXX, XXX]
 
 # == Airport restrictions ==
-# gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
-# gate_restrictions_not_allowed: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
+# gate_allowed_dests: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
+# gate_denied_dests: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
 # max_dests_per_gate: A mapping of airports to the maximum amount of destinations in each gate of each airport.
-gate_restrictions_allowed:
+gate_allowed_dests:
   XXX:
     A1: []
     A2: []
-gate_restrictions_not_allowed:
+gate_denied_dests:
   XXX:
     A1: []
     A2: []
