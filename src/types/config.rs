@@ -13,7 +13,7 @@ use crate::types::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub airline_name: AirlineName,
-    pub airline_code: String,
+    pub airline_code: SmolStr,
     ignored_airlines: Vec<AirlineName>,
     hubs: Vec<AirportCode>,
     hub_threshold: usize,
@@ -74,9 +74,9 @@ impl Config {
                         Some({
                             let params = l.split(' ').collect::<Vec<_>>();
                             Gate {
-                                airport: params.first()?.trim().to_string(),
-                                code: params.get(1)?.trim().to_string(),
-                                size: params.get(2)?.trim().to_string(),
+                                airport: params.first()?.trim().into(),
+                                code: params.get(1)?.trim().into(),
+                                size: params.get(2)?.trim().into(),
                             }
                         })
                     })
