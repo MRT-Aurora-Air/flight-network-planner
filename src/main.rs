@@ -5,7 +5,9 @@ mod utils;
 use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::Result;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::Shell;
+use clap_complete_fig::Fig;
 use itertools::Itertools;
 use log::warn;
 use types::config::Config;
@@ -29,6 +31,8 @@ enum Subcmd {
     GetConfig(GetConfig),
     /// Tool to format the output of `run` as a mapping of gates to destinations
     GateKeys(GateKeys),
+    /// Generate a completion file for your shell
+    Completion(Completion),
 }
 
 #[derive(Parser)]
@@ -59,6 +63,16 @@ struct GateKeys {
     /// The file to output the results to
     #[clap(short, long, value_parser)]
     output: Option<PathBuf>,
+}
+
+#[derive(Parser)]
+struct Completion {
+    /// The shell to generate for
+    #[arg(value_enum)]
+    shell: Shell,
+    /// Whether to generate for Fig instead
+    #[clap(short, long, action)]
+    fig: bool,
 }
 
 fn main() -> Result<()> {
@@ -124,6 +138,15 @@ fn main() -> Result<()> {
             println!("{res}");
             if let Some(ref output) = gate_keys.output {
                 std::fs::write(output, res)?;
+            }
+        }
+        Subcmd::Completion(completion) => {
+            let mut cmd = Args::command();
+            let name = cmd.get_name().to_string();
+            if completion.fig {
+                clap_complete::generate(Fig, &mut cmd, name, &mut std::io::stdout());
+            } else {
+                clap_complete::generate(completion.shell, &mut cmd, name, &mut std::io::stdout());
             }
         }
     }

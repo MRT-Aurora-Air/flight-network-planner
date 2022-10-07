@@ -29,7 +29,7 @@ fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
 #[derive(Debug)]
 pub struct FlightDataFlight {
     pub airline: AirlineName,
-    pub flight_number: String,
+    pub flight_number: SmolStr,
     pub airports: Vec<AirportCode>,
 }
 
@@ -50,21 +50,16 @@ impl FlightData {
         let raw = transpose(
             csv.records()
                 .into_iter()
-                .map(|record| {
-                    Ok(record?
-                        .into_iter()
-                        .map(|a| a.to_string())
-                        .collect::<Vec<_>>())
-                })
+                .map(|record| Ok(record?.into_iter().map(SmolStr::from).collect::<Vec<_>>()))
                 .collect::<Result<Vec<_>>>()?,
         );
-        let airport_codes: &[AirportCode] = raw[1][2..raw[1].len() - 5].as_ref();
-        let locations: &[String] = raw[2][2..raw[2].len()].as_ref();
+        let airport_codes: &[AirportCode] = &raw[1][2..raw[1].len() - 5];
+        let locations: &[SmolStr] = &raw[2][2..raw[2].len()];
         let flights = raw[4..]
             .iter()
             .map(|r| {
                 Ok({
-                    let mut airports: HashMap<String, Vec<AirportCode>> = HashMap::new();
+                    let mut airports: HashMap<SmolStr, Vec<AirportCode>> = HashMap::new();
                     r[2..r.len() - 5]
                         .iter()
                         .cloned()
@@ -79,7 +74,7 @@ impl FlightData {
                         .for_each(|(fs, a)| {
                             for f in fs {
                                 airports
-                                    .entry(f)
+                                    .entry(f.into())
                                     .and_modify(|v| v.push(a.to_owned()))
                                     .or_insert_with(|| vec![a.to_owned()]);
                             }
@@ -87,7 +82,7 @@ impl FlightData {
                     airports
                         .into_iter()
                         .map(|(a, f)| FlightDataFlight {
-                            airline: r[1].clone(),
+                            airline: r[1].to_owned(),
                             flight_number: a,
                             airports: f,
                         })
