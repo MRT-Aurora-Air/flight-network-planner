@@ -5,13 +5,15 @@
 airline_name: Foobar Air
 
 # == Handling existing flights ==
-# Flight data is pulled from the MRT Transit sheet.
-# ignored_airlines: The airlines to be ignored on the sheet (default: the value in airline_name)
+# Flight data are pulled from the MRT Transit sheet.
+# ignored_airlines: The airlines to be ignored on the sheet
+#                   (default: the value in "airline_name")
 ignored_airlines: []
 
 # == Airports ==
-# hubs: A list of hubs for your airline, in order of decreasing importance. (default: all airports with at least the number of gates in hub_threshold)
-# hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
+# hubs: A list of hubs for your airline, in order of decreasing importance.
+#       (default: is all airports with at least the number of gates in hub_threshold)
+# hub_threshold: The minimum number of gates for an airport to be considered a hub if "hubs" is empty
 hubs: []
 hub_threshold: 5
 
@@ -32,7 +34,8 @@ both_dir_same_num: true
 
 # == Gates ==
 # If both gate_json and gates are provided, gate_json will be picked first.
-# gate_file: The path of the file RELATIVE TO PRESENT WORKING DIRECTORY of all gates at each airport, in the format "<airport> <gate_no> <size>" for one row representing one gate.
+# gate_file: The path of the file RELATIVE TO PRESENT WORKING DIRECTORY of all gates at each airport,
+#            in the format "<airport> <gate_no> <size>" for one row representing one gate.
 # gates: A list of all the gates in the airport.
 #   XXX: The hub's airport code
 #   - code: The code of the gate
@@ -46,8 +49,10 @@ gates:
       size: S
       
 # == Warp limits ==
-# hard_max_hub: The hard maximum number of warps in a plane for hub airports. No plane will go past this number of warps.
-# hard_max_hub: The hard maximum number of warps in a plane for non-hub airports. No plane will go past this number of warps.
+# hard_max_hub: The hard maximum number of warps in a plane for hub airports.
+#               No plane will go past this number of warps.
+# hard_max_hub: The hard maximum number of warps in a plane for non-hub airports.
+#               No plane will go past this number of warps.
 # max_h2h: The maximum number of hub-to-hub warps in a plane at a hub.
 # max_h2n_hub: The maximum number of hub-to-nonhub warps in a plane at a hub.
 # max_h2n_nonhub: The maximum number of hub-to-nonhub warps in a plane at a nonhub.
@@ -60,9 +65,9 @@ max_h2n_nonhub: 6
 max_n2n: 6
 
 # == Flight restrictions ==
-# restricted_between: A list of set of airports that cannot be flown between one another.
+# restricted_between: A list of sets of airports that cannot be flown between one another.
 # restricted_to: A mapping of airports to a list of destinations that are not able to be flown to.
-# preferred_between: A list of set of airports that are preferred to be flown between one another.
+# preferred_between: A list of sets of airports that are preferred to be flown between one another.
 # preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
 # no_dupes: A list of airports where duplicate flights are strictly not allowed.
 restricted_between: [[XXX, XXX]]
@@ -76,7 +81,7 @@ no_dupes: [XXX, XXX]
 # == Airport restrictions ==
 # gate_allowed_dests: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
 # gate_denied_dests: A mapping of airports to a mapping of gates to a list of destinations that are not able to be flown to from the gate.
-# max_dests_per_gate: A mapping of airports to the maximum amount of destinations in each gate of each airport.
+# max_dests_per_gate: A mapping of airports to the maximum number of destinations in each gate of each airport.
 gate_allowed_dests:
   XXX:
     A1: []
