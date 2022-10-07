@@ -5,8 +5,10 @@ use counter::Counter;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{gate::Gate, *};
-use crate::types::gate::PartialGate;
+use crate::types::{
+    gate::{Gate, PartialGate},
+    *,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -81,13 +83,16 @@ impl Config {
                     .collect::<Option<Vec<_>>>()
                     .ok_or_else(|| anyhow!("Invalid gate file"))?
             } else {
-                self.gates.iter()
-                    .flat_map(|(a, pgs)| pgs.iter()
-                    .map(|pg| Gate {
-                        airport: a.to_owned(),
-                        code: pg.code.to_owned(),
-                        size: pg.size.to_owned()
-                    })).collect()
+                self.gates
+                    .iter()
+                    .flat_map(|(a, pgs)| {
+                        pgs.iter().map(|pg| Gate {
+                            airport: a.to_owned(),
+                            code: pg.code.to_owned(),
+                            size: pg.size.to_owned(),
+                        })
+                    })
+                    .collect()
             };
 
             self._gates = gates;
