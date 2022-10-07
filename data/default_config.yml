@@ -2,9 +2,7 @@
 
 # == General ==
 # airline_name: The name of the airline
-# airline_code: The two-letter code that is prefixed to all flight numbers
 airline_name: Foobar Air
-airline_code: FB
 
 # == Handling existing flights ==
 # Flight data is pulled from the MRT Transit sheet.

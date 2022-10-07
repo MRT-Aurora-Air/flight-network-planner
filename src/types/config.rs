@@ -13,7 +13,6 @@ use crate::types::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub airline_name: AirlineName,
-    pub airline_code: SmolStr,
     ignored_airlines: Vec<AirlineName>,
     hubs: Vec<AirportCode>,
     hub_threshold: usize,
