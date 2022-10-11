@@ -7,6 +7,7 @@ on:
 jobs:
   virustotal:
     runs-on: ubuntu-latest
+    environment: VT_API_KEY
     steps:
       -
         name: VirusTotal Scan
