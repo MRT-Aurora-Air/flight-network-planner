@@ -69,6 +69,7 @@ restricted_to:
   PCA: [MWT]
   MBI: [MWT]
   MWK: [MWT]
+  MFM: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
 preferred_between: [[PCE, SVS]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
