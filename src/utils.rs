@@ -13,7 +13,7 @@ macro_rules! fbp {
     (filter $f:expr) => {
         |(x, y)| {
             let (a, b) = $crate::utils::for_both_permutations(x, y, $f);
-            a || b
+            a && b
         }
     };
 }
