@@ -70,6 +70,7 @@ restricted_to:
   MBI: [MWT]
   MWK: [MWT]
   MFM: [DFM, DPH, VDA, DJE, WMI, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
+  VEX: [ABG, ANA, NIL, PMA, STS, WRA]
 preferred_between: [[PCE, SVS]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
