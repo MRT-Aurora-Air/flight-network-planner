@@ -71,11 +71,11 @@ restricted_to:
   MWK: [MWT]
   MFM: [DFM, DPH, VDA, DJE, WMI, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
   VEX: [ABG, ANA, NIL, PMA, STS, WRA]
-preferred_between: [[PCE, SVS]]
+preferred_between: [[PCE, SVS], [PCE, MWT]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
   PCA: [PCE, DBI, PIA]
-no_dupes: [WMA, CAP, DHA]
+no_dupes: [WMA, CAP, DHA, PCE]
 
 # == Airport restrictions ==
 # gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
