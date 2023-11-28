@@ -1,9 +1,11 @@
 #[inline]
+#[allow(clippy::impl_trait_in_params)]
 pub fn for_both<T, U: Sized>(x: &T, y: &T, f: impl Fn(&T) -> U) -> (U, U) {
     (f(x), f(y))
 }
 
 #[inline]
+#[allow(clippy::impl_trait_in_params)]
 pub fn for_both_permutations<T, U: Sized>(x: &T, y: &T, mut f: impl FnMut(&T, &T) -> U) -> (U, U) {
     (f(x, y), f(y, x))
 }

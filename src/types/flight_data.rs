@@ -15,7 +15,7 @@ const PLANE_DATA_URL: &str = "https://docs.google.com/spreadsheets/d/1wzvmXHQZ7e
 // https://stackoverflow.com/questions/64498617/how-to-transpose-a-vector-of-vectors-in-rust
 fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     let len = v[0].len();
-    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    let mut iters: Vec<_> = v.into_iter().map(std::iter::IntoIterator::into_iter).collect();
     (0..len)
         .map(|_| {
             iters
@@ -42,14 +42,13 @@ pub struct FlightData {
 }
 impl FlightData {
     pub fn from_sheets() -> Result<Self> {
-        let mut str = "".into();
+        let mut str = String::new();
         reqwest::blocking::get(PLANE_DATA_URL)?.read_to_string(&mut str)?;
         let mut csv = csv::ReaderBuilder::default()
             .has_headers(false)
             .from_reader(str.as_bytes());
         let raw = transpose(
             csv.records()
-                .into_iter()
                 .map(|record| Ok(record?.into_iter().map(SmolStr::from).collect::<Vec<_>>()))
                 .collect::<Result<Vec<_>>>()?,
         );
@@ -64,10 +63,10 @@ impl FlightData {
                         .iter()
                         .cloned()
                         .map(|cl| {
-                            if !cl.is_empty() {
-                                cl.split(", ").map(|a| a.to_string()).collect::<Vec<_>>()
-                            } else {
+                            if cl.is_empty() {
                                 vec![]
+                            } else {
+                                cl.split(", ").map(std::string::ToString::to_string).collect::<Vec<_>>()
                             }
                         })
                         .zip(airport_codes.to_owned())
@@ -94,22 +93,20 @@ impl FlightData {
             .flatten()
             .collect::<Vec<_>>();
 
-        Ok(FlightData {
+        let filter_codes = |world: &'static str| {
+            airport_codes
+                .iter()
+                .cloned()
+                .zip(locations.iter().cloned())
+                .filter(|(s, l)| !s.is_empty() && !l.is_empty())
+                .filter_map(|(s, l)| (l.trim() == world).then_some(s))
+                .collect::<Vec<_>>()
+        };
+
+        Ok(Self {
             flights,
-            old_world_airports: airport_codes
-                .iter()
-                .cloned()
-                .zip(locations.iter().cloned())
-                .filter(|(s, l)| !s.is_empty() && !l.is_empty())
-                .filter_map(|(s, l)| if l.trim() == "Old" { Some(s) } else { None })
-                .collect(),
-            new_world_airports: airport_codes
-                .iter()
-                .cloned()
-                .zip(locations.iter().cloned())
-                .filter(|(s, l)| !s.is_empty() && !l.is_empty())
-                .filter_map(|(s, l)| if l.trim() == "New" { Some(s) } else { None })
-                .collect(),
+            old_world_airports: filter_codes("Old"),
+            new_world_airports: filter_codes("New"),
             timestamp: SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
         })
     }

@@ -50,9 +50,7 @@ impl Config {
             .collect())
     }
     pub fn hubs(&mut self) -> Result<Vec<AirportCode>> {
-        Ok(if !self.hubs.is_empty() {
-            self.hubs.clone()
-        } else {
+        Ok(if self.hubs.is_empty() {
             self.gates()?
                 .into_iter()
                 .map(|g| g.airport)
@@ -61,6 +59,8 @@ impl Config {
                 .filter(|(_, c)| *c >= self.hub_threshold)
                 .map(|(a, _)| a)
                 .collect::<Vec<_>>()
+        } else {
+            self.hubs.clone()
         })
     }
     pub fn gates(&mut self) -> Result<Vec<Gate>> {

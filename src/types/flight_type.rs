@@ -13,12 +13,12 @@ pub enum FlightType {
 impl Display for FlightType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FlightType::NonExistingH2H => write!(f, "H2Hn"),
-            FlightType::ExistingH2H => write!(f, "H2He"),
-            FlightType::NonExistingH2N => write!(f, "H2Nn"),
-            FlightType::NonExistingN2N => write!(f, "N2Nn"),
-            FlightType::ExistingH2N => write!(f, "H2Ne"),
-            FlightType::ExistingN2N => write!(f, "N2Ne"),
+            Self::NonExistingH2H => write!(f, "H2Hn"),
+            Self::ExistingH2H => write!(f, "H2He"),
+            Self::NonExistingH2N => write!(f, "H2Nn"),
+            Self::NonExistingN2N => write!(f, "N2Nn"),
+            Self::ExistingH2N => write!(f, "H2Ne"),
+            Self::ExistingN2N => write!(f, "N2Ne"),
         }
     }
 }
@@ -26,12 +26,12 @@ impl Display for FlightType {
 impl FlightType {
     pub fn score(&self) -> i8 {
         match self {
-            FlightType::NonExistingH2H => 6,
-            FlightType::ExistingH2H => 5,
-            FlightType::NonExistingH2N => 3,
-            FlightType::NonExistingN2N => 2,
-            FlightType::ExistingH2N => 1,
-            FlightType::ExistingN2N => -1,
+            Self::NonExistingH2H => 6,
+            Self::ExistingH2H => 5,
+            Self::NonExistingH2N => 3,
+            Self::NonExistingN2N => 2,
+            Self::ExistingH2N => 1,
+            Self::ExistingN2N => -1,
         }
     }
 }

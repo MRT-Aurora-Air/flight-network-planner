@@ -36,9 +36,9 @@ pub fn update(
                 size: flight.size,
                 score: flight.score,
                 flight_type: flight.flight_type,
-            })
+            });
         } else {
-            new_flights.push(flight)
+            new_flights.push(flight);
         }
     }
 
@@ -66,10 +66,8 @@ pub fn update(
                                     .range_h2n
                                     .get(&*flight.airport1.0.to_owned())
                                     .unwrap_or_else(|| {
-                                        config
-                                            .range_h2n
-                                            .get(&*flight.airport2.0.to_owned())
-                                            .unwrap()
+                                        &config
+                                            .range_h2n[&*flight.airport2.0.to_owned()]
                                     })
                                     .to_owned(),
                             )
@@ -79,7 +77,7 @@ pub fn update(
 
                 let mut fn_ = fng.next();
                 while used_flight_numbers.contains(&fn_.unwrap()) {
-                    fn_ = fng.next()
+                    fn_ = fng.next();
                 }
                 fn_.unwrap()
             })
@@ -92,7 +90,7 @@ pub fn update(
             size: flight.size,
             score: flight.score,
             flight_type: flight.flight_type,
-        })
+        });
     }
     Ok(new_plan)
 }

@@ -49,6 +49,8 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
 
         Ok(s)
     }
+
+    //noinspection DuplicatedCode
     fn get_flight_type(
         &self,
         config: &mut Config,

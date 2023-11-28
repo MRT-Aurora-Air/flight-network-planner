@@ -241,7 +241,7 @@ pub fn run(
         for_both_permutations(&g1, &g2, |g1, g2| {
             destinations
                 .entry(g1.to_owned())
-                .or_insert(vec![])
+                .or_default()
                 .push(g2.airport.to_owned());
         });
         let fng = match ty {
@@ -262,7 +262,7 @@ pub fn run(
                             .range_h2n
                             .get(&*g1.airport.to_owned())
                             .unwrap_or_else(|| {
-                                config.range_h2n.get(&*g2.airport.to_owned()).unwrap()
+                                &config.range_h2n[&*g2.airport.to_owned()]
                             })
                             .to_owned(),
                     )
