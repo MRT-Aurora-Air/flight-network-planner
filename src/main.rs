@@ -21,14 +21,14 @@ use crate::{
 #[clap(version, about, long_about = None)]
 struct Args {
     #[clap(subcommand)]
-    subcmd: Subcmd,
+    command: Command,
 }
 #[derive(Parser)]
-enum Subcmd {
+enum Command {
     /// Run the planner
     Run(Run),
     /// Gets the configuration for the planner
-    GetConfig(GetConfig),
+    GetConfig,
     /// Tool to format the output of `run` as a mapping of gates to destinations
     GateKeys(GateKeys),
     /// Generate a completion file for your shell
@@ -39,9 +39,6 @@ enum Subcmd {
 struct Run {
     /// The configuration YML file to read from
     file: PathBuf,
-    /// The file to output the results to
-    #[clap(short, long, value_parser)]
-    output: Option<PathBuf>,
     /// Whether to print statistics
     #[clap(short, long, action)]
     stats: bool,
@@ -49,20 +46,12 @@ struct Run {
     #[clap(long, value_parser)]
     old: Option<PathBuf>,
 }
-#[derive(Parser)]
-struct GetConfig {
-    /// The name of the config file to save as
-    #[clap(short, long, value_parser, default_value = "mfnp_config.yml")]
-    output: PathBuf,
-}
+
 #[derive(Parser)]
 struct GateKeys {
     /// The output file from `run`
     #[clap(default_value = "out.txt")]
     out_file: PathBuf,
-    /// The file to output the results to
-    #[clap(short, long, value_parser)]
-    output: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -78,8 +67,8 @@ struct Completion {
 fn main() -> Result<()> {
     pretty_env_logger::try_init()?;
     let args = Args::parse();
-    match args.subcmd {
-        Subcmd::Run(run) => {
+    match args.command {
+        Command::Run(run) => {
             let mut config: Config = serde_yaml::from_reader(std::fs::File::open(&run.file)?)?;
             let mut fd = FlightData::from_sheets()?;
             fd.preprocess(&mut config)?;
@@ -90,7 +79,7 @@ fn main() -> Result<()> {
             };
             let mut result = run::run(&mut config, &fd, &old_plan)?;
             if run.stats {
-                warn!("\n{}", stats::get_stats(&result, &mut config)?)
+                eprintln!("\n{}", stats::get_stats(&result, &mut config)?)
             }
             if let Some(ref old) = run.old {
                 result = update::update(old.to_owned(), result, &mut config)?;
@@ -102,18 +91,11 @@ fn main() -> Result<()> {
                 .collect::<Vec<_>>()
                 .join("\n");
             println!("{res}");
-            if let Some(ref output) = run.output {
-                std::fs::write(output, res)?;
-            }
         }
-        Subcmd::GetConfig(get_config) => {
-            println!("Saving as {}", get_config.output.to_string_lossy());
-            std::fs::write(
-                get_config.output,
-                include_str!("../data/default_config.yml"),
-            )?;
+        Command::GetConfig => {
+            println!("{}", include_str!("../data/default_config.yml"));
         }
-        Subcmd::GateKeys(gate_keys) => {
+        Command::GateKeys(gate_keys) => {
             let flights = update::load_from_out(gate_keys.out_file)?;
             let mut map: HashMap<_, Vec<_>> = HashMap::new();
             for flight in flights {
@@ -136,11 +118,8 @@ fn main() -> Result<()> {
                 .sorted()
                 .join("\n");
             println!("{res}");
-            if let Some(ref output) = gate_keys.output {
-                std::fs::write(output, res)?;
-            }
         }
-        Subcmd::Completion(completion) => {
+        Command::Completion(completion) => {
             let mut cmd = Args::command();
             let name = cmd.get_name().to_string();
             if completion.fig {
