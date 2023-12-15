@@ -71,6 +71,7 @@ restricted_to:
   MWK: [MWT]
   MFM: [DFM, DPH, VDA, DJE, WMI, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
   VEX: [ABG, ANA, NIL, PMA, STS, WRA]
+  ERZ: [PCE, BIR, CAR, ATM, TTL, GLA, YSM, NIB, CWI, SEG, TSA, MBI, CBI, DFM, ZAQ, EIA, RBD, MWT, ICE, VFW, LAR, MFM, MMA]
 preferred_between: [[PCE, SVS], [PCE, MWT]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
