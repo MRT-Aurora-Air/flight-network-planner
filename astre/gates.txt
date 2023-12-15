@@ -216,5 +216,5 @@ GLA 5 S
 NIB 6 S
 BIR 5 S
 ERZ ? S
-ERZ ! M
+ERZ ! ML
 KWT @ S
