@@ -218,3 +218,5 @@ BIR 5 S
 ERZ ? S
 ERZ ! ML
 KWT @ S
+SHI # XS
+KZH $ XS
