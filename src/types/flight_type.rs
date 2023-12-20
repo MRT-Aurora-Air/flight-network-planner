@@ -24,7 +24,7 @@ impl Display for FlightType {
 }
 
 impl FlightType {
-    pub fn score(&self) -> i8 {
+    pub const fn score(self) -> i8 {
         match self {
             Self::NonExistingH2H => 6,
             Self::ExistingH2H => 5,

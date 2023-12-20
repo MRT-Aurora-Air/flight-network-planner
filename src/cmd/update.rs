@@ -66,8 +66,7 @@ pub fn update(
                                     .range_h2n
                                     .get(&*flight.airport1.0.to_owned())
                                     .unwrap_or_else(|| {
-                                        &config
-                                            .range_h2n[&*flight.airport2.0.to_owned()]
+                                        &config.range_h2n[&*flight.airport2.0.to_owned()]
                                     })
                                     .to_owned(),
                             )

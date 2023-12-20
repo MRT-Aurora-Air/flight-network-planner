@@ -6,7 +6,7 @@ use crate::{
     Config,
 };
 
-pub fn get_stats(res: &Vec<Flight>, config: &mut Config) -> Result<String> {
+pub fn get_stats(res: &[Flight], config: &mut Config) -> Result<String> {
     let flights = res.len();
     let flight_pairs = res.len() / 2;
     let airports = config.airports()?.len();

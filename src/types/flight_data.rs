@@ -15,7 +15,10 @@ const PLANE_DATA_URL: &str = "https://docs.google.com/spreadsheets/d/1wzvmXHQZ7e
 // https://stackoverflow.com/questions/64498617/how-to-transpose-a-vector-of-vectors-in-rust
 fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     let len = v[0].len();
-    let mut iters: Vec<_> = v.into_iter().map(std::iter::IntoIterator::into_iter).collect();
+    let mut iters: Vec<_> = v
+        .into_iter()
+        .map(std::iter::IntoIterator::into_iter)
+        .collect();
     (0..len)
         .map(|_| {
             iters
@@ -66,7 +69,9 @@ impl FlightData {
                             if cl.is_empty() {
                                 vec![]
                             } else {
-                                cl.split(", ").map(std::string::ToString::to_string).collect::<Vec<_>>()
+                                cl.split(", ")
+                                    .map(std::string::ToString::to_string)
+                                    .collect::<Vec<_>>()
                             }
                         })
                         .zip(airport_codes.to_owned())

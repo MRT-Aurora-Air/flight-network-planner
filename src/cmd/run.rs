@@ -261,9 +261,7 @@ pub fn run(
                         config
                             .range_h2n
                             .get(&*g1.airport.to_owned())
-                            .unwrap_or_else(|| {
-                                &config.range_h2n[&*g2.airport.to_owned()]
-                            })
+                            .unwrap_or_else(|| &config.range_h2n[&*g2.airport.to_owned()])
                             .to_owned(),
                     )
                 }),
