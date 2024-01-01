@@ -105,3 +105,4 @@ gate_denied_dests:
     A9: *pce
 max_dests_per_gate:
   PIA: 2
+  PCA: 4
