@@ -9,7 +9,8 @@ airline_code: ""
 # == Handling existing flights ==
 # Flight data is pulled from the MRT Transit sheet.
 # ignored_airlines: The airlines to be ignored on the sheet (default: the value in airline_name)
-ignored_airlines: ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air", "Astrella"]
+ignored_airlines:
+  ["Kaloro Air", "FlyLumeva", "FlySubway", "MRTHS Air", "Astrella"]
 
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
@@ -44,7 +45,7 @@ both_dir_same_num: true
 #     size: The size of the gate
 gate_file: astre/gates.txt
 gates: {}
-      
+
 # == Warp limits ==
 # hard_max_hub: The hard maximum number of warps in a plane for hub airports. No plane will go past this number of warps.
 # hard_max_hub: The hard maximum number of warps in a plane for non-hub airports. No plane will go past this number of warps.
@@ -62,17 +63,45 @@ max_n2n: 2
 # restricted_to: A mapping of airports to a list of destinations that are not able to be flown to.
 # preferred_between: A list of set of airports that are preferred to be flown between one another.
 # preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
-restricted_between: [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI], [TCB, TSA, TSN]]
+restricted_between:
+  [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI], [TCB, TSA, TSN]]
 restricted_to:
   MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
   PIA: [MWT]
   PCA: [MWT]
   MBI: [MWT]
   MWK: [MWT]
-  MFM: [DFM, DPH, VDA, DJE, WMI, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
+  MFM:
+    [DFM, DPH, VDA, DJE, WMI, RIV, MAX, MMA, LAR, VFW, SEG, RAA, PCE, MWT, MWK]
   VEX: [ABG, ANA, NIL, PMA, STS, WRA]
-  ERZ: [PCE, BIR, CAR, ATM, TTL, GLA, YSM, NIB, CWI, SEG, TSA, MBI, CBI, DFM, ZAQ, EIA, RBD, MWT, ICE, VFW, LAR, MFM, MMA]
+  ERZ:
+    [
+      PCE,
+      BIR,
+      CAR,
+      ATM,
+      TTL,
+      GLA,
+      YSM,
+      NIB,
+      CWI,
+      SEG,
+      TSA,
+      MBI,
+      CBI,
+      DFM,
+      ZAQ,
+      EIA,
+      RBD,
+      MWT,
+      ICE,
+      VFW,
+      LAR,
+      MFM,
+      MMA,
+    ]
   SHI: [SDZ, CAR, ATM, MWT, ERZ, TSN, PIA]
+  PXA: [EEA, PXL]
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
