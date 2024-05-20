@@ -20,6 +20,7 @@ macro_rules! fbp {
     };
 }
 
+#[allow(dead_code)]
 pub trait AnyAllBool: Copy {
     fn any(self) -> bool;
     fn all(self) -> bool;

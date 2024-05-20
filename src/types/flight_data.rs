@@ -29,6 +29,7 @@ fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
         .collect()
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct FlightDataFlight {
     pub airline: AirlineName,
@@ -36,6 +37,7 @@ pub struct FlightDataFlight {
     pub airports: Vec<AirportCode>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct FlightData {
     pub flights: Vec<FlightDataFlight>,
