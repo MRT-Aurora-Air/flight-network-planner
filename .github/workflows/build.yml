@@ -24,7 +24,7 @@ jobs:
             asset_name: flight-network-planner-macos
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build
       run: cargo build --release
     - name: Upload binaries
