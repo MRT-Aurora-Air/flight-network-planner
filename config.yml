@@ -64,7 +64,13 @@ max_n2n: 2
 # preferred_between: A list of set of airports that are preferred to be flown between one another.
 # preferred_to: A mapping of airports to a list of destinations that are preferred to be flown to.
 restricted_between:
-  [[VDA, DFM, DPH, GSM, WMI, DJE, DBI], [LFA, LAR], [MSA, MPI], [TCB, TSA, TSN]]
+  [
+    [VDA, DFM, DPH, GSM, WMI, DJE, DBI],
+    [LFA, LAR],
+    [MSA, MPI],
+    [TCB, TSA, TSN],
+    [MFM, MWK, MWT, MWL],
+  ]
 restricted_to:
   MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
   PIA: [MWT]
