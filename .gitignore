@@ -143,4 +143,4 @@ Cargo.lock
 
 # other
 .idea
-./flight-network-planner
+flight-network-planner

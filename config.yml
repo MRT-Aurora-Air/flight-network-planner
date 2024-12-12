@@ -111,7 +111,7 @@ restricted_to:
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   MBI: [CIA, PCE, KTI]
-  PCA: [PCE, DBI, PIA, EIA]
+  PCA: [PCE, RED, PIA, EIA]
   KWT: [SEG, VDA, RIV]
 no_dupes: [WMA, CAP, DHA, PCE]
 
