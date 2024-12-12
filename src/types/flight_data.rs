@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     io::Read,
     time::{SystemTime, UNIX_EPOCH},
 };
