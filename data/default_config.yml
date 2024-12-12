@@ -34,7 +34,7 @@ both_dir_same_num: true
 
 # == Gates ==
 # If both gate_json and gates are provided, gate_json will be picked first.
-# gate_file: The path of the file RELATIVE TO PRESENT WORKING DIRECTORY of all gates at each airport,
+# gate_file: The path of the file RELATIVE TO THE FOLDER THIS FILE IS IN of all gates at each airport,
 #            in the format "<airport> <gate_no> <size>" for one row representing one gate.
 # gates: A list of all the gates in the airport.
 #   XXX: The hub's airport code

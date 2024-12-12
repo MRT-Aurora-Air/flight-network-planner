@@ -43,8 +43,11 @@ struct Run {
     stats: bool,
     /// The old output file
     /// (will be used to preserve original flight routes so it won't duplicate so much)
-    #[clap(long, value_parser)]
+    #[clap(short, long, value_parser)]
     old: Option<PathBuf>,
+    /// Whether to replace the old file instead of printing to stdout
+    #[clap(short, long, action)]
+    replace: bool,
 }
 
 #[derive(Parser)]
@@ -91,7 +94,16 @@ fn main() -> Result<()> {
                 .map(|f| f.to_string())
                 .collect::<Vec<_>>()
                 .join("\n");
-            println!("{res}");
+            if run.replace {
+                if let Some(old) = &run.old {
+                    std::fs::write(old, res)?;
+                    println!("Overwritten {}", old.display());
+                } else {
+                    println!("{res}");
+                }
+            } else {
+                println!("{res}");
+            }
         }
         Command::GetConfig => {
             println!("{}", include_str!("../data/default_config.yml"));
