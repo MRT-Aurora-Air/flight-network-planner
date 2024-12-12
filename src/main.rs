@@ -70,7 +70,8 @@ fn main() -> Result<()> {
     match args.command {
         Command::Run(run) => {
             let mut config: Config = serde_yaml::from_reader(std::fs::File::open(&run.file)?)?;
-            let mut fd = FlightData::from_sheets()?;
+            config._folder = run.file.parent().map(ToOwned::to_owned);
+            let mut fd = FlightData::from_gatelogue()?;
             fd.preprocess(&mut config)?;
             let old_plan = if let Some(old) = &run.old {
                 Some(update::load_from_out(old.to_owned())?)

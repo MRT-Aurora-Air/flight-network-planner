@@ -38,6 +38,8 @@ pub struct Config {
     pub max_dests_per_gate: HashMap<AirportCode, u8>,
     #[serde(skip)]
     _gates: Vec<Gate>,
+    #[serde(skip)]
+    pub _folder: Option<PathBuf>,
 }
 impl Config {
     pub fn airports(&mut self) -> Result<Vec<AirportCode>> {
@@ -66,6 +68,11 @@ impl Config {
     pub fn gates(&mut self) -> Result<Vec<Gate>> {
         if self._gates.is_empty() {
             let gates = if let Some(gate_file) = &self.gate_file {
+                let gate_file = if let Some(folder) = &self._folder {
+                    folder.join(gate_file)
+                } else {
+                    gate_file.to_owned()
+                };
                 std::fs::read_to_string(gate_file)?
                     .split('\n')
                     .filter(|l| !l.trim().is_empty())
