@@ -1,6 +1,6 @@
 [package]
 name = "flight-network-planner"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2021"
 description = "Minecart Rapid Transit Flight Network Planner for airlines, made by __7d"
 authors = ["__7d"]
