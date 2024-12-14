@@ -121,9 +121,16 @@ pub fn run(
             Ok((g1, g2, 0i8, ty))
         })
         .filter_ok(|(g1, g2, _, ty)| {
-            if preferred_between.iter().any(|a| a.contains(&g1.airport) && a.contains(&g2.airport))
-                || preferred_to.get(&g1.airport).is_some_and(|a| a.contains(&g2.airport))
-                || preferred_to.get(&g2.airport).is_some_and(|a| a.contains(&g1.airport)) {
+            if preferred_between
+                .iter()
+                .any(|a| a.contains(&g1.airport) && a.contains(&g2.airport))
+                || preferred_to
+                    .get(&g1.airport)
+                    .is_some_and(|a| a.contains(&g2.airport))
+                || preferred_to
+                    .get(&g2.airport)
+                    .is_some_and(|a| a.contains(&g1.airport))
+            {
                 true
             } else if no_dupes.contains(&g1.airport) || no_dupes.contains(&g2.airport) {
                 ![
