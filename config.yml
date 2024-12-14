@@ -15,7 +15,7 @@ ignored_airlines:
 # == Airports ==
 # hubs: A list of hubs for your airline. (default: all airports with at least the number of gates in hub_threshold)
 # hub_threshold: The minimum number of gates for an airport to be considered a hub, if hubs is empty
-hubs: [CIA, PCE, MWT, LAR, SEG, VDA] # AUR
+hubs: [CIA, PCE, MWT, LAR, SEG, VDA, AIX]
 hub_threshold: 5
 
 # == Flight naming scheme ==
@@ -26,7 +26,7 @@ hub_threshold: 5
 #   XXX: [...]: XXX is the hub's airport code
 # both_dir_same_num: Whether flights use the same number for both directions
 range_h2h: [[1, 100]]
-range_n2n: [[1401, 1600]]
+range_n2n: [[9001, 9999]]
 range_h2n:
   CIA: [[101, 300]]
   PCE: [[301, 500]]
@@ -34,7 +34,8 @@ range_h2n:
   LAR: [[701, 900]]
   SEG: [[901, 1100]]
   VDA: [[1101, 1300]]
-both_dir_same_num: true
+  AIX: [[1301, 1500]]
+both_dir_same_num: false
 
 # == Gates ==
 # If both gate_json and gates are provided, gate_json will be picked first
@@ -51,11 +52,11 @@ gates: {}
 # hard_max_hub: The hard maximum number of warps in a plane for non-hub airports. No plane will go past this number of warps.
 # max_h2n: The maximum number of h2n warps in a plane. Applies to non-hubs only.
 # max_n2n: The maximum number of n2n warps in a plane.
-hard_max_hub: 4
-hard_max_nonhub: 3
+hard_max_hub: 5
+hard_max_nonhub: 4
 max_h2h: 1
-max_h2n_hub: 4
-max_h2n_nonhub: 3
+max_h2n_hub: 5
+max_h2n_nonhub: 4
 max_n2n: 2
 
 # == Flight restrictions ==
