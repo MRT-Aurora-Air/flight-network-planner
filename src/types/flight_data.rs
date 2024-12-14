@@ -1,5 +1,4 @@
 use std::{
-    io::Read,
     time::{SystemTime, UNIX_EPOCH},
 };
 

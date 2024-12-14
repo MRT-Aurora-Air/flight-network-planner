@@ -64,6 +64,8 @@ pub fn run(
     let restricted_to = config.restricted_to.to_owned();
     let gate_allowed_dests = config.gate_allowed_dests.to_owned();
     let gate_denied_dests = config.gate_denied_dests.to_owned();
+    let preferred_between = config.preferred_between.to_owned();
+    let preferred_to = config.preferred_to.to_owned();
     let no_dupes = config.no_dupes.to_owned();
     let mut possible_flights = config
         .gates()?
@@ -119,7 +121,11 @@ pub fn run(
             Ok((g1, g2, 0i8, ty))
         })
         .filter_ok(|(g1, g2, _, ty)| {
-            if no_dupes.contains(&g1.airport) || no_dupes.contains(&g2.airport) {
+            if preferred_between.iter().any(|a| a.contains(&g1.airport) && a.contains(&g2.airport))
+                || preferred_to.get(&g1.airport).is_some_and(|a| a.contains(&g2.airport))
+                || preferred_to.get(&g2.airport).is_some_and(|a| a.contains(&g1.airport)) {
+                true
+            } else if no_dupes.contains(&g1.airport) || no_dupes.contains(&g2.airport) {
                 ![
                     FlightType::ExistingH2H,
                     FlightType::ExistingH2N,
