@@ -86,7 +86,7 @@ preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   PCA: [PCE, RED, PIA, EIA]
   SHI: [CIA, KEK, TOU]
-  GOD: [AIX]
+  GOD: [CIA, MWT, AIX, GEP]
 no_dupes: [WMA, CAP, DHA, PCE]
 
 # == Airport restrictions ==
