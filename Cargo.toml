@@ -1,6 +1,6 @@
 [package]
 name = "flight-network-planner"
-version = "1.2.2"
+version = "1.2.3"
 edition = "2021"
 description = "Minecart Rapid Transit Flight Network Planner for airlines, made by __7d"
 authors = ["__7d"]
@@ -10,7 +10,6 @@ authors = ["__7d"]
 [dependencies]
 serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34"
-serde_json = "1.0.134"
 
 log = "0.4.22"
 pretty_env_logger = "0.5.0"
