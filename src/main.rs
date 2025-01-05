@@ -6,8 +6,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
-use clap_complete::Shell;
-use clap_complete_fig::Fig;
+use clap_complete_command::Shell;
 use itertools::Itertools;
 use types::config::Config;
 
@@ -31,7 +30,11 @@ enum Command {
     /// Tool to format the output of `run` as a mapping of gates to destinations
     GateKeys(GateKeys),
     /// Generate a completion file for your shell
-    Completion(Completion),
+    Completion {
+        /// The shell to generate for
+        #[arg(value_enum)]
+        shell: Shell,
+    },
 }
 
 #[derive(Parser)]
@@ -55,16 +58,6 @@ struct GateKeys {
     /// The output file from `run`
     #[clap(default_value = "out.txt")]
     out_file: PathBuf,
-}
-
-#[derive(Parser)]
-struct Completion {
-    /// The shell to generate for
-    #[arg(value_enum)]
-    shell: Shell,
-    /// Whether to generate for Fig instead
-    #[clap(short, long, action)]
-    fig: bool,
 }
 
 fn main() -> Result<()> {
@@ -132,14 +125,8 @@ fn main() -> Result<()> {
                 .join("\n");
             println!("{res}");
         }
-        Command::Completion(completion) => {
-            let mut cmd = Args::command();
-            let name = cmd.get_name().to_owned();
-            if completion.fig {
-                clap_complete::generate(Fig, &mut cmd, name, &mut std::io::stdout());
-            } else {
-                clap_complete::generate(completion.shell, &mut cmd, name, &mut std::io::stdout());
-            }
+        Command::Completion { shell } => {
+            shell.generate(&mut Args::command(), &mut std::io::stdout());
         }
     }
     Ok(())
