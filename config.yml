@@ -82,12 +82,13 @@ restricted_to:
   MBI: [MWT]
   MWK: [MWT]
   PXA: [EEA, PXL]
+  WCC: [PFR, XSE, KNT, CWI, GZA, LAR]
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   PCA: [PCE, RED, PIA, EIA]
   SHI: [CIA, KEK, TOU]
   GOD: [CIA, MWT, AIX, GEP]
-no_dupes: [WMA, CAP, DHA, PCE]
+no_dupes: [WMA, CAP, DHA, PCE, WCC]
 
 # == Airport restrictions ==
 # gate_restrictions_allowed: A mapping of airports to a mapping of gates to a list of destinations that are only able to be flown to from the gate.
