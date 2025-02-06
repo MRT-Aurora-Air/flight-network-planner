@@ -82,12 +82,12 @@ restricted_to:
   MBI: [MWT]
   MWK: [MWT]
   PXA: [EEA, PXL]
-  WCC: [PFR, XSE, KNT, CWI, GZA, LAR, GEP, WMI, NHR, ROS, ERZ, ZRZ, LNT, DJE, PFR, YYO, RBR, MWL, GLA, EEA, YSM, HZN, DBI, PXA, ACA, MAX, SAN, YNB, MBI, TSA]
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   PCA: [PCE, RED, PIA, EIA]
   SHI: [CIA, KEK, TOU]
   GOD: [CIA, MWT, AIX, GEP]
+  WCC: [CIA, AIX, MWT, EIA]
 no_dupes: [WMA, CAP, DHA, PCE, WCC]
 
 # == Airport restrictions ==
