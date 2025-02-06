@@ -82,6 +82,7 @@ restricted_to:
   MBI: [MWT]
   MWK: [MWT]
   PXA: [EEA, PXL]
+  GEP: [ZRZ]
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
   PCA: [PCE, RED, PIA, EIA]
