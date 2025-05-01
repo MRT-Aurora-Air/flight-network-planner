@@ -1,5 +1,5 @@
 #!/bin/bash
 set -euxo pipefail
 
-curl "https://github.com/MRT-Aurora-Air/flight-network-planner/releases/download/v1.2.3/flight-network-planner-ubuntu" -Lo flight-network-planner
-chmod +x flight-network-planner
+curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+cargo binstall flight-network-planner --install-path . 
