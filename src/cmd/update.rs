@@ -11,7 +11,7 @@ use crate::{
 pub fn update(
     old_file: PathBuf,
     generated_plan: Vec<Flight>,
-    config: &mut Config,
+    config: &Config,
 ) -> Result<Vec<Flight>> {
     let old_plan = load_from_out(old_file)?;
     let mut new_plan = vec![];
@@ -19,23 +19,23 @@ pub fn update(
     let mut flight_number_mapping = HashMap::new();
     let mut new_flights = vec![];
 
-    let mut h2h_fng = FlightNumberGenerator::new(config.range_h2h.to_owned());
+    let mut h2h_fng = FlightNumberGenerator::new(config.range_h2h.clone());
     let mut h2n_fng = HashMap::new();
-    let mut n2n_fng = FlightNumberGenerator::new(config.range_n2n.to_owned());
+    let mut n2n_fng = FlightNumberGenerator::new(config.range_n2n.clone());
 
     for flight in generated_plan {
         if let Some(old_flight) = old_plan
             .iter()
             .find(|f| f.airport1 == flight.airport1 && f.airport2 == flight.airport2)
         {
-            used_flight_numbers.push(old_flight.flight_number.to_owned());
+            used_flight_numbers.push(old_flight.number.to_owned());
             new_plan.push(Flight {
-                flight_number: old_flight.flight_number,
+                number: old_flight.number,
                 airport1: flight.airport1,
                 airport2: flight.airport2,
                 size: flight.size,
                 score: flight.score,
-                flight_type: flight.flight_type,
+                ty: flight.ty,
             });
         } else {
             new_flights.push(flight);
@@ -44,15 +44,15 @@ pub fn update(
 
     for flight in new_flights {
         let flight_number = flight_number_mapping
-            .entry(flight.flight_number)
+            .entry(flight.number)
             .or_insert_with(|| {
-                let fng = match flight.flight_type {
+                let fng = match flight.ty {
                     FlightType::ExistingH2H | FlightType::NonExistingH2H => &mut h2h_fng,
                     FlightType::ExistingH2N | FlightType::NonExistingH2N => h2n_fng
                         .entry(
                             (if config
                                 .range_h2n
-                                .contains_key(&*flight.airport1.0.to_owned())
+                                .contains_key(&*flight.airport1.0.clone())
                             {
                                 &flight.airport1.1
                             } else {
@@ -64,9 +64,9 @@ pub fn update(
                             FlightNumberGenerator::new(
                                 config
                                     .range_h2n
-                                    .get(&*flight.airport1.0.to_owned())
+                                    .get(&*flight.airport1.0.clone())
                                     .unwrap_or_else(|| {
-                                        &config.range_h2n[&*flight.airport2.0.to_owned()]
+                                        &config.range_h2n[&*flight.airport2.0.clone()]
                                     })
                                     .to_owned(),
                             )
@@ -83,12 +83,12 @@ pub fn update(
             .to_owned();
         used_flight_numbers.push(flight_number.to_owned());
         new_plan.push(Flight {
-            flight_number,
+            number: flight_number,
             airport1: flight.airport1,
             airport2: flight.airport2,
             size: flight.size,
             score: flight.score,
-            flight_type: flight.flight_type,
+            ty: flight.ty,
         });
     }
     Ok(new_plan)
@@ -104,12 +104,12 @@ pub fn load_from_out(out: PathBuf) -> Result<Vec<Flight>> {
                 let re = regex.captures(l)?;
 
                 Flight {
-                    flight_number: re.get(1)?.as_str().parse::<u16>().unwrap(),
+                    number: re.get(1)?.as_str().parse::<u16>().unwrap(),
                     airport1: (re.get(3)?.as_str().into(), re.get(4)?.as_str().into()),
                     airport2: (re.get(5)?.as_str().into(), re.get(6)?.as_str().into()),
                     size: re.get(2)?.as_str().into(),
                     score: re.get(7)?.as_str().parse::<i8>().unwrap(),
-                    flight_type: match re.get(8)?.as_str() {
+                    ty: match re.get(8)?.as_str() {
                         "H2Hn" => FlightType::NonExistingH2H,
                         "H2Nn" => FlightType::NonExistingH2N,
                         "N2Nn" => FlightType::NonExistingN2N,

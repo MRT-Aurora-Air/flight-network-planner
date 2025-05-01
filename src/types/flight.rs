@@ -4,12 +4,12 @@ use crate::types::{flight_type::FlightType, AirportCode, FlightNumber, GateCode,
 
 #[derive(Debug, Clone)]
 pub struct Flight {
-    pub flight_number: FlightNumber,
+    pub number: FlightNumber,
     pub airport1: (AirportCode, GateCode),
     pub airport2: (AirportCode, GateCode),
     pub size: Size,
     pub score: i8,
-    pub flight_type: FlightType,
+    pub ty: FlightType,
 }
 
 impl Display for Flight {
@@ -17,14 +17,14 @@ impl Display for Flight {
         write!(
             f,
             "{} ({}): {} {} {} {} ({}, {})",
-            self.flight_number,
+            self.number,
             self.size,
             self.airport1.0,
             self.airport1.1,
             self.airport2.0,
             self.airport2.1,
             self.score,
-            self.flight_type
+            self.ty
         )
     }
 }

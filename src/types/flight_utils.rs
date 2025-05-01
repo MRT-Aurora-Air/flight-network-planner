@@ -28,16 +28,16 @@ impl FlightUtils for (&AirportCode, &AirportCode) {
             .iter()
             .any(|fs| fs.contains(self.0) && fs.contains(self.1))
         {
-            s += 10;
+            s += 20;
         }
         if let Some(dests) = config.preferred_to.get(self.0) {
             if dests.contains(self.1) {
-                s += 10;
+                s += 20;
             }
         }
         if let Some(dests) = config.preferred_to.get(self.1) {
             if dests.contains(self.0) {
-                s += 10;
+                s += 20;
             }
         }
 

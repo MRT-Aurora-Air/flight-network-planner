@@ -1,42 +1,50 @@
 [package]
 name = "flight-network-planner"
-version = "1.2.0"
+version = "1.2.4"
 edition = "2021"
-description = "Minecart Rapid Transit Flight Network Planner for airlines, made by __7d"
-authors = ["__7d"]
+description = "Minecart Rapid Transit Flight Network Planner for airlines"
+authors = ["7d <61975820+iiiii7d@users.noreply.github.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+keywords = [
+  "mrt",
+]
+categories = ["games"]
+homepage = "https://github.com/mrt-aurora-air/flight-network-planner"
+repository = "https://github.com/mrt-aurora-air/flight-network-planner"
+rust-version = "1.84.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.216", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
-serde_json = "1.0.133"
-reqwest = { version = "0.12.9", features = ["blocking"] }
-log = "0.4.22"
+
+log = "0.4.27"
 pretty_env_logger = "0.5.0"
-clap = { version = "4.5.23", features = ["derive"] }
-clap_complete = "4.5.38"
-clap_complete_fig = "4.5.2"
-anyhow = { version = "1.0.94", features = ["backtrace"] }
-counter = "0.6.0"
+clap = { version = "4.5.37", features = ["derive"] }
+clap_complete_command = { version = "0.6.1", features = ["carapace", "fig"] }
+
+anyhow = { version = "1.0.98", features = ["backtrace"] }
 itertools = "0.14.0"
 regex = "1.11.1"
 smol_str = { version = "0.3.2", features = ["serde"] }
 
+gatelogue-types = { version = "2.0.1", features = ["ureq_get"] }
+counter = "0.6.0"
+
 [profile.release]
 opt-level = 3
 lto = true
+codegen-units = 1
 
-[profile.dev]
-opt-level = 3
-
-[workspace.lints.rust]
+[lints.rust]
 future-incompatible = "deny"
 
-[workspace.lints.clippy]
+[lints.clippy]
 all = "warn"
 pedantic = "warn"
-# cargo = "warn"
+cargo = "warn"
 nursery = "warn"
 
 missing_errors_doc = { level="allow", priority = 1 }
@@ -47,6 +55,7 @@ module_name_repetitions = { level="allow", priority = 1 }
 multiple_crate_versions = { level="allow", priority = 1 }
 used_underscore_binding = { level="allow", priority = 1 }
 pub_underscore_fields = { level="allow", priority = 1 }
+similar_names = { level="allow", priority = 1 }
 
 allow_attributes = "warn"
 #arithmetic_side_effects = "warn"
