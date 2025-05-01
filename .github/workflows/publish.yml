@@ -30,6 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: version
     strategy:
+      fail-fast: true
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
@@ -62,6 +63,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
+        target: ${{ matrix.target }}
     - shell: bash
       run: |
         echo "archive=flight-network-planner-${{ matrix.target }}-${{ needs.version.outputs.version }}.${{ matrix.archive_ext }}" >> $GITHUB_ENV
@@ -143,7 +145,7 @@ jobs:
 
   crates-io:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
 
     steps:
       - uses: actions/checkout@v4
