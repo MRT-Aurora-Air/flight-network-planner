@@ -4,6 +4,7 @@ version = "1.2.3"
 edition = "2021"
 description = "Minecart Rapid Transit Flight Network Planner for airlines, made by __7d"
 authors = ["__7d"]
+rust-version = "1.84.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
