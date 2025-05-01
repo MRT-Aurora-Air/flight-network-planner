@@ -74,16 +74,16 @@ fn main() -> Result<()> {
             } else {
                 None
             };
-            let mut result = run::run(&mut config, &fd, &old_plan)?;
+            let mut result = run::run(&mut config, &fd, old_plan.as_ref())?;
             if run.stats {
                 eprintln!("\n{}", stats::get_stats(&result, &mut config)?);
             }
             if let Some(old) = &run.old {
-                result = update::update(old.to_owned(), result, &mut config)?;
+                result = update::update(old.to_owned(), result, &config)?;
             }
             let res = result
                 .into_iter()
-                .sorted_by_key(|f| f.flight_number)
+                .sorted_by_key(|f| f.number)
                 .map(|f| f.to_string())
                 .collect::<Vec<_>>()
                 .join("\n");
@@ -107,7 +107,7 @@ fn main() -> Result<()> {
             for flight in flights {
                 map.entry(flight.airport1)
                     .or_default()
-                    .push((flight.airport2, flight.flight_number));
+                    .push((flight.airport2, flight.number));
             }
             let res = map
                 .iter()

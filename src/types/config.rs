@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{
     gate::{Gate, PartialGate},
-    *,
+    AirlineName, AirportCode, FlightNumber, GateCode,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -68,11 +68,7 @@ impl Config {
     pub fn gates(&mut self) -> Result<Vec<Gate>> {
         if self._gates.is_empty() {
             let gates = if let Some(gate_file) = &self.gate_file {
-                let gate_file = if let Some(folder) = &self._folder {
-                    folder.join(gate_file)
-                } else {
-                    gate_file.to_owned()
-                };
+                let gate_file = self._folder.as_ref().map_or_else(|| gate_file.to_owned(), |folder| folder.join(gate_file));
                 std::fs::read_to_string(gate_file)?
                     .split('\n')
                     .filter(|l| !l.trim().is_empty())
@@ -94,8 +90,8 @@ impl Config {
                     .flat_map(|(a, pgs)| {
                         pgs.iter().map(|pg| Gate {
                             airport: a.to_owned(),
-                            code: pg.code.to_owned(),
-                            size: pg.size.to_owned(),
+                            code: pg.code.clone(),
+                            size: pg.size.clone(),
                         })
                     })
                     .collect()
@@ -103,13 +99,13 @@ impl Config {
 
             self._gates = gates;
         }
-        Ok(self._gates.to_owned())
+        Ok(self._gates.clone())
     }
     pub fn ignored_airlines(&self) -> Vec<AirlineName> {
         if self.ignored_airlines.is_empty() {
-            vec![self.airline_name.to_owned()]
+            vec![self.airline_name.clone()]
         } else {
-            self.ignored_airlines.to_owned()
+            self.ignored_airlines.clone()
         }
     }
 }

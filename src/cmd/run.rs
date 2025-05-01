@@ -18,25 +18,20 @@ fn sort_gates(
     x: Vec<(Gate, Gate, i8, FlightType)>,
     config: &mut Config,
     fd: &FlightData,
-    old_plan: &Option<Vec<Flight>>,
+    old_plan: Option<&Vec<Flight>>,
 ) -> Result<Vec<(Gate, Gate, i8, FlightType)>> {
     Ok(x.into_iter()
         .map(|(g1, g2, _, ty)| {
             let s = (&g1, &g2).score(config, fd)?;
-            let existed = if let Some(old_plan) = old_plan {
-                old_plan
+            let existed = old_plan.is_some_and(|old_plan| old_plan
                     .iter()
                     .filter(|f| {
-                        (f.airport1 == (g1.airport.to_owned(), g1.code.to_owned())
-                            && f.airport2 == (g2.airport.to_owned(), g2.code.to_owned()))
-                            || (f.airport1 == (g2.airport.to_owned(), g2.code.to_owned())
-                                && f.airport2 == (g1.airport.to_owned(), g1.code.to_owned()))
+                        (f.airport1 == (g1.airport.clone(), g1.code.clone())
+                            && f.airport2 == (g2.airport.clone(), g2.code.clone()))
+                            || (f.airport1 == (g2.airport.clone(), g2.code.clone())
+                                && f.airport2 == (g1.airport.clone(), g1.code.clone()))
                     })
-                    .count()
-                    > 0
-            } else {
-                false
-            };
+                    .count() > 0);
             Ok((g1, g2, s, ty, existed))
         })
         .collect::<Result<Vec<_>>>()?
@@ -54,26 +49,27 @@ fn sort_gates(
         .collect::<Vec<_>>())
 }
 
+#[expect(clippy::too_many_lines)]
 pub fn run(
     config: &mut Config,
     fd: &FlightData,
-    old_plan: &Option<Vec<Flight>>,
+    old_plan: Option<&Vec<Flight>>,
 ) -> Result<Vec<Flight>> {
     let hubs = config.hubs()?;
-    let restricted_between = config.restricted_between.to_owned();
-    let restricted_to = config.restricted_to.to_owned();
-    let gate_allowed_dests = config.gate_allowed_dests.to_owned();
-    let gate_denied_dests = config.gate_denied_dests.to_owned();
-    let preferred_between = config.preferred_between.to_owned();
-    let preferred_to = config.preferred_to.to_owned();
-    let no_dupes = config.no_dupes.to_owned();
+    let restricted_between = config.restricted_between.clone();
+    let restricted_to = config.restricted_to.clone();
+    let gate_allowed_dests = config.gate_allowed_dests.clone();
+    let gate_denied_dests = config.gate_denied_dests.clone();
+    let preferred_between = config.preferred_between.clone();
+    let preferred_to = config.preferred_to.clone();
+    let no_dupes = config.no_dupes.clone();
     let mut possible_flights = config
         .gates()?
         .into_iter()
         .tuple_combinations::<(_, _)>()
         .filter(|(g1, g2)| {
             !restricted_between.iter().any(|re| {
-                vec![g1.airport.to_owned(), g2.airport.to_owned()]
+                vec![g1.airport.clone(), g2.airport.clone()]
                     .into_iter()
                     .all(|a| re.contains(&a))
             })
@@ -91,29 +87,13 @@ pub fn run(
         .filter(fbp!(
             filter | g1: &Gate,
             g2: &Gate | {
-                if let Some(gates) = gate_allowed_dests.get(&*g1.airport) {
-                    if let Some(gate) = gates.get(&*g1.code) {
-                        gate.contains(&g2.airport)
-                    } else {
-                        true
-                    }
-                } else {
-                    true
-                }
+                gate_allowed_dests.get(&*g1.airport).is_none_or(|gates| gates.get(&*g1.code).is_none_or(|gate| gate.contains(&g2.airport)))
             }
         ))
         .filter(fbp!(
             filter | g1: &Gate,
             g2: &Gate | {
-                if let Some(gates) = gate_denied_dests.get(&*g1.airport) {
-                    if let Some(gate) = gates.get(&*g1.code) {
-                        !gate.contains(&g2.airport)
-                    } else {
-                        true
-                    }
-                } else {
-                    true
-                }
+                gate_denied_dests.get(&*g1.airport).is_none_or(|gates| gates.get(&*g1.code).is_none_or(|gate| !gate.contains(&g2.airport)))
             }
         ))
         .map(|(g1, g2)| {
@@ -145,9 +125,9 @@ pub fn run(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let mut h2h_fng = FlightNumberGenerator::new(config.range_h2h.to_owned());
+    let mut h2h_fng = FlightNumberGenerator::new(config.range_h2h.clone());
     let mut h2n_fng = HashMap::new();
-    let mut n2n_fng = FlightNumberGenerator::new(config.range_n2n.to_owned());
+    let mut n2n_fng = FlightNumberGenerator::new(config.range_n2n.clone());
 
     let mut destinations: HashMap<Gate, Vec<AirportCode>> = HashMap::new();
     let mut flights: Vec<Flight> = vec![];
@@ -156,7 +136,7 @@ pub fn run(
 
     while let Some((mut g1, mut g2, mut s, ty)) = possible_flights.pop() {
         if hubs.contains(&g2.airport) && !hubs.contains(&g1.airport) {
-            (g1, g2) = (g2.to_owned(), g1.to_owned());
+            (g1, g2) = (g2.clone(), g1.clone());
         }
         if for_both(&g1, &g2, |g| {
             destinations.get(g).unwrap_or(&vec![]).len()
@@ -257,43 +237,42 @@ pub fn run(
             destinations
                 .entry(g1.to_owned())
                 .or_default()
-                .push(g2.airport.to_owned());
+                .push(g2.airport.clone());
         });
         let fng = match ty {
             FlightType::ExistingH2H | FlightType::NonExistingH2H => &mut h2h_fng,
             FlightType::ExistingH2N | FlightType::NonExistingH2N => h2n_fng
                 .entry(
-                    (if config.range_h2n.contains_key(&*g1.airport.to_owned()) {
+                    (if config.range_h2n.contains_key(&*g1.airport.clone()) {
                         &g1
                     } else {
                         &g2
                     })
-                    .airport
-                    .to_owned(),
+                    .airport.clone(),
                 )
                 .or_insert_with(|| {
                     FlightNumberGenerator::new(
                         config
                             .range_h2n
-                            .get(&*g1.airport.to_owned())
-                            .unwrap_or_else(|| &config.range_h2n[&*g2.airport.to_owned()])
+                            .get(&*g1.airport.clone())
+                            .unwrap_or_else(|| &config.range_h2n[&*g2.airport.clone()])
                             .to_owned(),
                     )
                 }),
             FlightType::ExistingN2N | FlightType::NonExistingN2N => &mut n2n_fng,
         };
 
-        let fn1 = fng.find(|a| !flights.iter().map(|f| f.flight_number).contains(a));
+        let fn1 = fng.find(|a| !flights.iter().map(|f| f.number).contains(a));
         let fn2 = if config.both_dir_same_num {
             fn1
         } else {
-            fng.find(|a| !flights.iter().map(|f| f.flight_number).contains(a))
+            fng.find(|a| !flights.iter().map(|f| f.number).contains(a))
         };
 
         let (flight1, flight2) =
             for_both_permutations(&(&g1, fn1), &(&g2, fn2), |(g1, fn1), (g2, _)| {
                 let flight = Flight {
-                    flight_number: if let Some(fn_) = fn1 {
+                    number: if let Some(fn_) = fn1 {
                         fn_.to_owned()
                     } else {
                         return Err(anyhow!(
@@ -302,17 +281,17 @@ pub fn run(
                             g2.airport
                         ));
                     },
-                    airport1: (g1.airport.to_owned(), g1.code.to_owned()),
-                    airport2: (g2.airport.to_owned(), g2.code.to_owned()),
-                    size: g1.size.to_owned(),
+                    airport1: (g1.airport.clone(), g1.code.clone()),
+                    airport2: (g2.airport.clone(), g2.code.clone()),
+                    size: g1.size.clone(),
                     score: s,
-                    flight_type: ty,
+                    ty,
                 };
                 info!(
                     "{} ({} {}): {} {} -> {} {}, {}",
-                    flight.flight_number, ty, g1.size, g1.airport, g1.code, g2.airport, g2.code, s
+                    flight.number, ty, g1.size, g1.airport, g1.code, g2.airport, g2.code, s
                 );
-                flights.push(flight.to_owned());
+                flights.push(flight.clone());
                 Ok(flight)
             });
         flight1?;

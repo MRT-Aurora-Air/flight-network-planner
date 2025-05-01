@@ -5,9 +5,9 @@ use gatelogue_types::{GatelogueData, World};
 use itertools::Itertools;
 use log::{debug, info, warn};
 
-use crate::types::{config::Config, *};
+use crate::types::{config::Config, AirlineName, AirportCode, SmolStr};
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug)]
 pub struct FlightDataFlight {
     pub airline: AirlineName,
@@ -15,7 +15,7 @@ pub struct FlightDataFlight {
     pub airports: Vec<AirportCode>,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug)]
 pub struct FlightData {
     pub flights: Vec<FlightDataFlight>,
@@ -34,16 +34,16 @@ impl FlightData {
             .values()
             .filter_map(|a| a.as_air_flight())
             .map(|a| {
-                let airline_name = data.get_air_airline(*a.airline)?.name.to_owned().into();
+                let airline_name = data.get_air_airline(*a.airline)?.name.clone().into();
 
-                let flight_number = a.codes.first().ok_or(anyhow!("No codes"))?.into();
+                let flight_number = a.codes.first().ok_or_else(|| anyhow!("No codes"))?.into();
 
                 let airport_codes = a
                     .gates
                     .iter()
                     .map(|a| {
                         let airport_id = *data.get_air_gate(**a)?.airport;
-                        Ok(data.get_air_airport(airport_id)?.code.to_owned().into())
+                        Ok(data.get_air_airport(airport_id)?.code.clone().into())
                     })
                     .collect::<Result<Vec<_>>>()?;
 
@@ -60,7 +60,7 @@ impl FlightData {
             .values()
             .filter_map(|a| a.as_air_airport())
             .filter(|a| a.common.world.as_ref().is_some_and(|a| **a == World::Old))
-            .map(|a| a.code.to_owned().into())
+            .map(|a| a.code.clone().into())
             .collect();
 
         let new_world_airports = data
@@ -68,7 +68,7 @@ impl FlightData {
             .values()
             .filter_map(|a| a.as_air_airport())
             .filter(|a| a.common.world.as_ref().is_none_or(|a| **a == World::New))
-            .map(|a| a.code.to_owned().into())
+            .map(|a| a.code.clone().into())
             .collect();
 
         Ok(Self {
@@ -88,14 +88,14 @@ impl FlightData {
         config
             .gates()?
             .iter()
-            .map(|g| g.airport.to_owned())
+            .map(|g| g.airport.clone())
             .sorted()
             .dedup()
             .filter(|a| {
                 !self.new_world_airports.contains(a) && !self.old_world_airports.contains(a)
             })
             .for_each(|a| {
-                warn!("Airport `{}` doesn't exist", a);
+                warn!("Airport `{a}` doesn't exist");
             });
 
         let airports = config.airports()?;
@@ -104,7 +104,7 @@ impl FlightData {
             .into_iter()
             .filter(|a| !airports.iter().contains(a))
             .for_each(|a| {
-                warn!("Airport `{}` has no gates but is stated as a hub", a);
+                warn!("Airport `{a}` has no gates but is stated as a hub");
             });
 
         debug!("Ensuring flight number allocations for hubs");

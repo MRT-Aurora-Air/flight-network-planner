@@ -17,7 +17,7 @@ pub fn get_stats(res: &[Flight], config: &mut Config) -> Result<String> {
 
     let full_gates = config.gates()?.into_iter().filter(|g| {
         res.iter()
-            .filter(|f| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .filter(|f| f.airport1 == (g.airport.clone(), g.code.clone()))
             .count()
             >= if hubs.contains(&g.airport) {
                 hard_max_hub
@@ -27,7 +27,7 @@ pub fn get_stats(res: &[Flight], config: &mut Config) -> Result<String> {
     });
     let empty_gates = config.gates()?.into_iter().filter(|g| {
         res.iter()
-            .filter(|f| f.airport1 == (g.airport.to_owned(), g.code.to_owned()))
+            .filter(|f| f.airport1 == (g.airport.clone(), g.code.clone()))
             .count()
             == 0
     });
@@ -39,7 +39,7 @@ pub fn get_stats(res: &[Flight], config: &mut Config) -> Result<String> {
                 FlightType::ExistingH2N,
                 FlightType::ExistingN2N,
             ]
-            .contains(&f.flight_type)
+            .contains(&f.ty)
         })
         .count();
     Ok(format!(
