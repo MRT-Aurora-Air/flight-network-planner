@@ -1,0 +1,153 @@
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # test:
+  #   strategy:
+  #     matrix:
+  #       os: [ ubuntu-latest, macos-latest, windows-latest ]
+  #   runs-on: ${{ matrix.os }}
+  #
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - run: cargo test -- --nocapture
+  #     env:
+  #       OUT_DIR: target
+  
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: cargo update
+    - id: version
+      run: echo "version=v$(cargo pkgid | cut -d '#' -f 2)" >> "$GITHUB_OUTPUT"
+
+  build: # adapted from https://github.com/foresterre/flight-network-planner/blob/main/.github/workflows/build-release-binaries.yaml
+    runs-on: ${{ matrix.os }}
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive_ext: tgz
+            kind: linux
+
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            archive_ext: tgz
+            kind: linux
+
+          - target: x86_64-apple-darwin
+            os: macos-13
+            archive_ext: tgz
+            kind: macos
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive_ext: tgz
+            kind: macos
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive_ext: zip
+            kind: windows
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - shell: bash
+      run: |
+        echo "archive=flight-network-planner-${{ matrix.target }}-${{ needs.version.outputs.version }}.${{ matrix.archive_ext }}" >> $GITHUB_ENV
+        echo "subfolder=flight-network-planner-${{ matrix.target }}-${{ needs.version.outputs.version }}" >> $GITHUB_ENV
+    - shell: bash
+      run: mkdir ${{ env.subfolder }}
+
+    - if: matrix.target == 'x86_64-unknown-linux-musl'
+      uses: awalsh128/cache-apt-pkgs-action@v1
+      with:
+        packages: musl-tools
+        version: 1.0
+
+    - shell: bash
+      run: cargo build --target=${{ matrix.target }} --release
+      
+    - if: matrix.kind == 'macos'
+      shell: bash
+      run: |
+        cp  ./target/${{ matrix.target }}/release/flight-network-planner ${{ env.subfolder }}
+        gtar --create --gzip --file=${{ env.archive }} ${{ env.subfolder }}
+    - if: matrix.kind == 'linux'
+      shell: bash
+      run: |
+        cp target/${{ matrix.target }}/release/flight-network-planner ${{ env.subfolder }}
+        tar --create --gzip --file=${{ env.archive }} ${{ env.subfolder }}
+    - if: matrix.kind == 'windows'
+      shell: bash
+      run: |
+        cp target/${{ matrix.target }}/release/flight-network-planner.exe ./${{ env.subfolder }}
+        7z a -tzip ${{ env.archive }} ${{ env.subfolder }}
+    
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.target }}
+        path: ./${{ env.archive }}
+
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [build, version]
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - run: mkdir dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86_64-unknown-linux-gnu
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86_64-unknown-linux-musl
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86_64-apple-darwin
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: aarch64-apple-darwin
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86_64-pc-windows-msvc
+          path: dist
+
+      - run: cargo package
+      - run: mv target/package/*.crate dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.version }}
+          files: dist/*
+
+  crates-io:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo login "$CRATES_IO_API"
+        env:
+          CRATES_IO_API: ${{ secrets.CRATES_IO_API }}
+      - run: cargo publish
