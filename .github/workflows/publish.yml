@@ -26,7 +26,7 @@ jobs:
     - id: version
       run: echo "version=v$(cargo pkgid | cut -d '#' -f 2)" >> "$GITHUB_OUTPUT"
 
-  build: # adapted from https://github.com/foresterre/flight-network-planner/blob/main/.github/workflows/build-release-binaries.yaml
+  build: # adapted from https://github.com/foresterre/cargo-msrv/blob/main/.github/workflows/build-release-binaries.yaml
     runs-on: ${{ matrix.os }}
     needs: version
     strategy:
