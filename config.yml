@@ -83,6 +83,7 @@ restricted_to:
   MWK: [MWT]
   PXA: [EEA, PXL]
   NPR: [ZRZ]
+  GEP: [PFR, YNB, NPR, CAR, GLA]
   ERZ: [NPR]
 preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
 preferred_to:
