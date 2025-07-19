@@ -85,12 +85,14 @@ restricted_to:
   NPR: [ZRZ]
   GEP: [PFR, YNB, NPR, CAR, GLA]
   ERZ: [NPR]
-preferred_between: [[PCE, SVS], [PCE, MWT], [SHI, KEK], [KEK, KZH]]
+preferred_between: [[KEK, KZH]]
 preferred_to:
+  PCE: [SVS, MWT]
   PCA: [PCE, RED, PIA, EIA]
   SHI: [CIA, KEK, TOU]
   GOD: [CIA, MWT, AIX, NPR]
   WCC: [CIA, AIX, MWT, EIA]
+  EMI: [PCE, MWT]
 no_dupes: [WMA, CAP, DHA, PCE, WCC]
 
 # == Airport restrictions ==
