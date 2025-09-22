@@ -36,6 +36,7 @@ range_h2n:
   VDA: [[1101, 1300]]
   AIX: [[1301, 1500]]
   NPR: [[1501, 1700]]
+  GBE: [[1701, 1900]]
 both_dir_same_num: false
 
 # == Gates ==
@@ -74,6 +75,7 @@ restricted_between:
     [ACA, EIA],
     [MFM, MWK, MWT, MWL],
     [PXA, EEA, PXL],
+    [PCA, NPR, YNB],
   ]
 restricted_to:
   MWT: [DFM, DPH, VDA, DJE, WMA, RIV, MAX, MMA, LAR, VFW, SEG, RAA]
@@ -104,6 +106,8 @@ gate_allowed_dests:
     B2: *pce
   TCB:
     A2: [OCD, TSN, TCB, TSA, RAV, HND, HGW, GBE, STS]
+  EMI:
+    →9: [PCE, MWT, NSG]
 
 gate_denied_dests:
   PCE:
