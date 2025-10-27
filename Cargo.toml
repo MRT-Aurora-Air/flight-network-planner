@@ -12,7 +12,7 @@ keywords = [
 categories = ["games"]
 homepage = "https://github.com/mrt-aurora-air/flight-network-planner"
 repository = "https://github.com/mrt-aurora-air/flight-network-planner"
-rust-version = "1.85"
+rust-version = "1.89"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,13 +22,13 @@ serde_yaml = "0.9.34"
 
 log = "0.4.28"
 pretty_env_logger = "0.5.0"
-clap = { version = "4.5.49", features = ["derive"] }
+clap = { version = "4.5.50", features = ["derive"] }
 clap_complete_command = { version = "0.6.1", features = ["carapace", "fig"] }
 
 anyhow = { version = "1.0.100", features = ["backtrace"] }
 itertools = "0.14.0"
 regex = "1.12.2"
-smol_str = { version = "0.3.2", features = ["serde"] }
+smol_str = { version = "0.3.4", features = ["serde"] }
 
 gatelogue-types = { version = "2.0.4", features = ["ureq_get"] }
 counter = "0.7.0"
