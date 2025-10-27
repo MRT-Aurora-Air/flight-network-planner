@@ -96,7 +96,7 @@ jobs:
         cp target/${{ matrix.target }}/release/flight-network-planner.exe ./${{ env.subfolder }}
         7z a -tzip ${{ env.archive }} ${{ env.subfolder }}
     
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: ${{ matrix.target }}
         path: ./${{ env.archive }}
